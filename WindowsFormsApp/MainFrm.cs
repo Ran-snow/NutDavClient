@@ -1,27 +1,22 @@
-﻿using NutDavClient.Properties;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.IO;
-using System.Resources;
-using System.Security.AccessControl;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using WindowsFormsApp.Properties;
 
-namespace NutDavClient
+namespace WindowsFormsApp
 {
     public partial class MainFrm : Form
     {
         public MainFrm()
         {
             InitializeComponent();
-        }
-
-        private void TvFiles_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
-        {
-            throw new NotImplementedException();
         }
 
         private void PopulateTreeView()
@@ -35,20 +30,29 @@ namespace NutDavClient
 
             foreach (var item in Environment.GetLogicalDrives())
             {
-                DirectoryInfo info = new DirectoryInfo(item);
-                if (info.Exists)
-                {
-                    TreeNode rootNode = new TreeNode(info.Name);
-                    rootNode.Tag = info;
-                    GetDirectories(info.GetDirectories(), rootNode, 0);
-                    tvFiles.Nodes.Add(rootNode);
-                }
+                TreeNode node = AddNode(item);
+                if (node != null) tvFiles.Nodes.Add(node);
             }
+        }
+
+        private TreeNode AddNode(string path)
+        {
+            DirectoryInfo info = new DirectoryInfo(path);
+            if (!info.Exists)
+            {
+                return null;
+            }
+
+            TreeNode node = new TreeNode(info.Name);
+            node.Tag = info;
+            GetDirectories(info.GetDirectories(), node, 0);
+
+            return node;
         }
 
         private void GetDirectories(DirectoryInfo[] subDirs, TreeNode nodeToAddTo, int depth)
         {
-            if (depth > 2) return;
+            if (depth > 1) return;
 
             TreeNode aNode;
             DirectoryInfo[] subSubDirs;
@@ -60,6 +64,7 @@ namespace NutDavClient
                 }
 
                 aNode = new TreeNode(subDir.Name, 0, 0);
+                aNode.Name = subDir.Name;
                 aNode.Tag = subDir;
                 aNode.ImageKey = "ClosedFolder";
                 aNode.SelectedImageKey = "OpenFolder";
@@ -69,13 +74,23 @@ namespace NutDavClient
                     GetDirectories(subSubDirs, aNode, ++depth);
                 }
 
-                nodeToAddTo.Nodes.Add(aNode);
+                if (!(nodeToAddTo.Nodes.Find(aNode.Name, false).Count() > 0))
+                {
+                    nodeToAddTo.Nodes.Add(aNode);
+                }
             }
         }
 
         private void MainFrm_Load(object sender, EventArgs e)
         {
             PopulateTreeView();
+        }
+
+        private void tvFiles_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
+        {
+            e.Node.Nodes.Add(AddNode(((DirectoryInfo)e.Node.Tag).FullName));
+
+            Console.WriteLine(e.Node.Text);
         }
     }
 }

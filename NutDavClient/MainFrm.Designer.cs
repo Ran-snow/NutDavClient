@@ -28,23 +28,29 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.listView1 = new System.Windows.Forms.ListView();
+            this.lvFileExplorer = new System.Windows.Forms.ListView();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.button1 = new System.Windows.Forms.Button();
             this.tvFiles = new System.Windows.Forms.TreeView();
             this.label1 = new System.Windows.Forms.Label();
+            this.Name = new System.Windows.Forms.ColumnHeader();
+            this.Type = new System.Windows.Forms.ColumnHeader();
             // 
-            // listView1
+            // lvFileExplorer
             // 
-            this.listView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.lvFileExplorer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.listView1.HideSelection = false;
-            this.listView1.Location = new System.Drawing.Point(313, 0);
-            this.listView1.Name = "lvFileExplorer";
-            this.listView1.Size = new System.Drawing.Size(660, 607);
-            this.listView1.TabIndex = 0;
-            this.listView1.UseCompatibleStateImageBehavior = false;
+            this.lvFileExplorer.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.Name,
+            this.Type});
+            this.lvFileExplorer.HideSelection = false;
+            this.lvFileExplorer.Location = new System.Drawing.Point(313, 0);
+            this.lvFileExplorer.Name = "lvFileExplorer";
+            this.lvFileExplorer.Size = new System.Drawing.Size(660, 607);
+            this.lvFileExplorer.TabIndex = 0;
+            this.lvFileExplorer.UseCompatibleStateImageBehavior = false;
+            this.tvFiles.NodeMouseClick += TvFiles_NodeMouseClick;
             // 
             // progressBar1
             // 
@@ -84,6 +90,16 @@
             this.label1.TabIndex = 4;
             this.label1.Text = "Tip";
             // 
+            // Name
+            // 
+            this.Name.Name = "Name";
+            this.Name.Text = "Name";
+            // 
+            // Type
+            // 
+            this.Type.Name = "Type";
+            this.Type.Text = "Type";
+            // 
             // MainFrm
             // 
             this.ClientSize = new System.Drawing.Size(973, 655);
@@ -91,7 +107,7 @@
             this.Controls.Add(this.tvFiles);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.progressBar1);
-            this.Controls.Add(this.listView1);
+            this.Controls.Add(this.lvFileExplorer);
             this.Name = "MainFrm";
             this.Text = "Nut Webdav";
             this.Load += new System.EventHandler(this.MainFrm_Load);
@@ -101,10 +117,12 @@
         #endregion
 
         private System.Windows.Forms.Button btnSetting;
-        private System.Windows.Forms.ListView listView1;
+        private System.Windows.Forms.ListView lvFileExplorer;
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.TreeView tvFiles;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.ColumnHeader Name;
+        private System.Windows.Forms.ColumnHeader Type;
     }
 }
