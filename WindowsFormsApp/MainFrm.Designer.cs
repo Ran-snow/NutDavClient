@@ -31,7 +31,7 @@
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.button1 = new System.Windows.Forms.Button();
+            this.btnSync = new System.Windows.Forms.Button();
             this.tvFiles = new System.Windows.Forms.TreeView();
             this.label1 = new System.Windows.Forms.Label();
             this.lvFileExplorer = new System.Windows.Forms.ListView();
@@ -53,7 +53,7 @@
             this.tabControl1.Controls.Add(this.tabPage3);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
-            this.tabControl1.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.tabControl1.Margin = new System.Windows.Forms.Padding(5);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
             this.tabControl1.Size = new System.Drawing.Size(1149, 681);
@@ -63,9 +63,9 @@
             // 
             this.tabPage1.Controls.Add(this.splitContainer1);
             this.tabPage1.Location = new System.Drawing.Point(4, 30);
-            this.tabPage1.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.tabPage1.Margin = new System.Windows.Forms.Padding(5);
             this.tabPage1.Name = "tabPage1";
-            this.tabPage1.Padding = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.tabPage1.Padding = new System.Windows.Forms.Padding(5);
             this.tabPage1.Size = new System.Drawing.Size(1141, 647);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Explorer";
@@ -75,12 +75,12 @@
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer1.Location = new System.Drawing.Point(5, 5);
-            this.splitContainer1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.splitContainer1.Margin = new System.Windows.Forms.Padding(4);
             this.splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.button1);
+            this.splitContainer1.Panel1.Controls.Add(this.btnSync);
             this.splitContainer1.Panel1.Controls.Add(this.tvFiles);
             // 
             // splitContainer1.Panel2
@@ -93,16 +93,17 @@
             this.splitContainer1.SplitterWidth = 2;
             this.splitContainer1.TabIndex = 0;
             // 
-            // button1
+            // btnSync
             // 
-            this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.button1.Location = new System.Drawing.Point(169, 577);
-            this.button1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(105, 52);
-            this.button1.TabIndex = 1;
-            this.button1.Text = "Sync";
-            this.button1.UseVisualStyleBackColor = true;
+            this.btnSync.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSync.Location = new System.Drawing.Point(169, 577);
+            this.btnSync.Margin = new System.Windows.Forms.Padding(4);
+            this.btnSync.Name = "btnSync";
+            this.btnSync.Size = new System.Drawing.Size(105, 52);
+            this.btnSync.TabIndex = 1;
+            this.btnSync.Text = "Sync";
+            this.btnSync.UseVisualStyleBackColor = true;
+            this.btnSync.Click += new System.EventHandler(this.btnSync_Click);
             // 
             // tvFiles
             // 
@@ -110,7 +111,7 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tvFiles.Location = new System.Drawing.Point(4, 4);
-            this.tvFiles.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tvFiles.Margin = new System.Windows.Forms.Padding(4);
             this.tvFiles.Name = "tvFiles";
             this.tvFiles.Size = new System.Drawing.Size(272, 565);
             this.tvFiles.TabIndex = 0;
@@ -132,41 +133,45 @@
             this.lvFileExplorer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.lvFileExplorer.CheckBoxes = true;
             this.lvFileExplorer.HideSelection = false;
+            this.lvFileExplorer.ImeMode = System.Windows.Forms.ImeMode.Disable;
             this.lvFileExplorer.Location = new System.Drawing.Point(4, 0);
-            this.lvFileExplorer.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.lvFileExplorer.Margin = new System.Windows.Forms.Padding(4);
             this.lvFileExplorer.Name = "lvFileExplorer";
-            this.lvFileExplorer.Size = new System.Drawing.Size(839, 569);
+            this.lvFileExplorer.Size = new System.Drawing.Size(841, 569);
             this.lvFileExplorer.TabIndex = 1;
             this.lvFileExplorer.UseCompatibleStateImageBehavior = false;
+            this.lvFileExplorer.View = System.Windows.Forms.View.Details;
+            this.lvFileExplorer.MouseClick += new System.Windows.Forms.MouseEventHandler(this.lvFileExplorer_MouseClick);
             // 
             // progressBar1
             // 
             this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.progressBar1.Location = new System.Drawing.Point(4, 603);
-            this.progressBar1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.progressBar1.Margin = new System.Windows.Forms.Padding(4);
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(841, 30);
+            this.progressBar1.Size = new System.Drawing.Size(843, 30);
             this.progressBar1.TabIndex = 0;
             // 
             // tabPage2
             // 
-            this.tabPage2.Location = new System.Drawing.Point(4, 26);
-            this.tabPage2.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.tabPage2.Location = new System.Drawing.Point(4, 30);
+            this.tabPage2.Margin = new System.Windows.Forms.Padding(5);
             this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(5, 5, 5, 5);
-            this.tabPage2.Size = new System.Drawing.Size(1480, 822);
+            this.tabPage2.Padding = new System.Windows.Forms.Padding(5);
+            this.tabPage2.Size = new System.Drawing.Size(1141, 647);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Detail";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
             // tabPage3
             // 
-            this.tabPage3.Location = new System.Drawing.Point(4, 26);
-            this.tabPage3.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tabPage3.Location = new System.Drawing.Point(4, 30);
+            this.tabPage3.Margin = new System.Windows.Forms.Padding(4);
             this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(1480, 822);
+            this.tabPage3.Size = new System.Drawing.Size(1141, 647);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "Setting";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -178,10 +183,11 @@
             this.ClientSize = new System.Drawing.Size(1149, 681);
             this.Controls.Add(this.tabControl1);
             this.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.Margin = new System.Windows.Forms.Padding(5);
             this.Name = "MainFrm";
             this.Text = "MainFrm";
             this.Load += new System.EventHandler(this.MainFrm_Load);
+            this.SizeChanged += new System.EventHandler(this.MainFrm_SizeChanged);
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.splitContainer1.Panel1.ResumeLayout(false);
@@ -200,7 +206,7 @@
         private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.TreeView tvFiles;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button btnSync;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ListView lvFileExplorer;
         private System.Windows.Forms.ProgressBar progressBar1;
