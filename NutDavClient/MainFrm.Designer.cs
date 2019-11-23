@@ -33,17 +33,12 @@
             this.button1 = new System.Windows.Forms.Button();
             this.tvFiles = new System.Windows.Forms.TreeView();
             this.label1 = new System.Windows.Forms.Label();
-            this.Name = new System.Windows.Forms.ColumnHeader();
-            this.Type = new System.Windows.Forms.ColumnHeader();
             // 
             // lvFileExplorer
             // 
             this.lvFileExplorer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.lvFileExplorer.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.Name,
-            this.Type});
             this.lvFileExplorer.HideSelection = false;
             this.lvFileExplorer.Location = new System.Drawing.Point(313, 0);
             this.lvFileExplorer.Name = "lvFileExplorer";
@@ -89,16 +84,7 @@
             this.label1.Size = new System.Drawing.Size(26, 17);
             this.label1.TabIndex = 4;
             this.label1.Text = "Tip";
-            // 
-            // Name
-            // 
-            this.Name.Name = "Name";
-            this.Name.Text = "Name";
-            // 
-            // Type
-            // 
-            this.Type.Name = "Type";
-            this.Type.Text = "Type";
+
             // 
             // MainFrm
             // 
@@ -122,7 +108,5 @@
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.TreeView tvFiles;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.ColumnHeader Name;
-        private System.Windows.Forms.ColumnHeader Type;
     }
 }

@@ -84,10 +84,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\ClosedFolder.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\OpenFolder.png" />
+    <None Include="Resources\file.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

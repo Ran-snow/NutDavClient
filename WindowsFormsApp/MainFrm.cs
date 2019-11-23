@@ -176,6 +176,7 @@ namespace WindowsFormsApp
             ImageList imageList = new ImageList();
             imageList.Images.Add("ClosedFolder", (Image)(Resources.ResourceManager.GetObject("ClosedFolder")));
             imageList.Images.Add("OpenFolder", (Image)(Resources.ResourceManager.GetObject("OpenFolder")));
+            imageList.Images.Add("file", (Image)(Resources.ResourceManager.GetObject("file")));
 
             tvFiles.ImageList = imageList;
             lvFileExplorer.LargeImageList = imageList;
@@ -225,16 +226,21 @@ namespace WindowsFormsApp
             e.Node.Nodes.AddRange(treeNodeCollection.ToArray());
 
             //Set data to listview
-            DirectoryInfo directoryInfo = (DirectoryInfo)e.Node.Tag;
+            SetData((DirectoryInfo)e.Node.Tag, (files) => files.OrderBy(x => x.Name));
+        }
+
+        private void SetData(DirectoryInfo directoryInfo, Func<FileInfo[], IEnumerable<FileInfo>> CustomRule)
+        {
             FileInfo[] files = directoryInfo.GetFiles();
+            IEnumerable<FileInfo> fileInfos = CustomRule.Invoke(files);
 
             lvFileExplorer.Items.Clear();
 
             lvFileExplorer.BeginUpdate();
-            foreach (FileInfo file in files)
+            foreach (FileInfo file in fileInfos)
             {
                 var item = new ListViewItem();
-                item.ImageIndex = 1;
+                item.ImageKey = "file";
                 item.Text = file.Name;
                 item.Name = file.Name;
 
@@ -260,18 +266,80 @@ namespace WindowsFormsApp
             MessageBox.Show(lvFileExplorer.CheckedItems.Count.ToString());
         }
 
-        private void lvFileExplorer_MouseClick(object sender, MouseEventArgs e)
+        private void lvFileExplorer_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
-            ListViewItem lv = lvFileExplorer.GetItemAt(e.X, e.Y);
-            lv.Checked = !lv.Checked;
-            if (lv.Checked)
+            if (!e.Item.Checked && e.Item.Selected)
             {
-                lv.BackColor = Color.FromArgb(50,192, 168, 232);
-                lv.Selected = false;
+                e.Item.Checked = true;
+                e.Item.BackColor = Color.FromArgb(50, 192, 168, 232);
+                e.Item.Selected = false;
             }
-            else
+            else if (!e.Item.Checked)
             {
-                lv.BackColor = Color.White;
+                e.Item.BackColor = Color.White;
+            }
+        }
+
+        bool col0Status = false;
+        bool col1Status = false;
+        bool col2Status = false;
+        bool col3Status = false;
+
+        private void lvFileExplorer_ColumnClick(object sender, ColumnClickEventArgs e)
+        {
+            if (e.Column == 0)
+            {
+                if (col0Status == false)
+                {
+                    SetData((DirectoryInfo)tvFiles.SelectedNode.Tag, (files) => files.OrderBy(x => x.Name));
+                }
+                else
+                {
+                    SetData((DirectoryInfo)tvFiles.SelectedNode.Tag, (files) => files.OrderByDescending(x => x.Name));
+                }
+                col0Status = !col0Status;
+            }
+            else if (e.Column == 1)
+            {
+                if (col1Status == false)
+                {
+                    SetData((DirectoryInfo)tvFiles.SelectedNode.Tag,
+                        (files) => files.OrderBy(x => x.Extension).ThenBy(x => x.Name));
+                }
+                else
+                {
+                    SetData((DirectoryInfo)tvFiles.SelectedNode.Tag,
+                        (files) => files.OrderByDescending(x => x.Extension).ThenBy(x => x.Name));
+                }
+                col1Status = !col1Status;
+            }
+            else if (e.Column == 2)
+            {
+                if (col2Status == false)
+                {
+                    SetData((DirectoryInfo)tvFiles.SelectedNode.Tag,
+                        (files) => files.OrderBy(x => x.LastWriteTime).ThenBy(x => x.Name));
+                }
+                else
+                {
+                    SetData((DirectoryInfo)tvFiles.SelectedNode.Tag,
+                        (files) => files.OrderByDescending(x => x.LastWriteTime).ThenBy(x => x.Name));
+                }
+                col2Status = !col2Status;
+            }
+            else if (e.Column == 3)
+            {
+                if (col3Status == false)
+                {
+                    SetData((DirectoryInfo)tvFiles.SelectedNode.Tag,
+                        (files) => files.OrderBy(x => x.Length).ThenBy(x => x.Name));
+                }
+                else
+                {
+                    SetData((DirectoryInfo)tvFiles.SelectedNode.Tag,
+                        (files) => files.OrderByDescending(x => x.Length).ThenBy(x => x.Name));
+                }
+                col3Status = !col3Status;
             }
         }
     }
