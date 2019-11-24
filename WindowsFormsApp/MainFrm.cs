@@ -168,7 +168,6 @@ namespace WindowsFormsApp
 
         #endregion
 
-
         private void MainFrm_Load(object sender, EventArgs e)
         {
             //Set ImageList
