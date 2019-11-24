@@ -271,12 +271,23 @@ namespace WindowsFormsApp
             if (!e.Item.Checked && e.Item.Selected)
             {
                 e.Item.Checked = true;
-                e.Item.BackColor = Color.FromArgb(50, 192, 168, 232);
                 e.Item.Selected = false;
             }
             else if (!e.Item.Checked)
             {
                 e.Item.BackColor = Color.White;
+            }
+        }
+
+        private void lvFileExplorer_ItemChecked(object sender, ItemCheckedEventArgs e)
+        {
+            if (!e.Item.Checked)
+            {
+                e.Item.BackColor = Color.White;
+            }
+            else
+            {
+                e.Item.BackColor = Color.FromArgb(50, 192, 168, 232);
             }
         }
 
@@ -287,6 +298,8 @@ namespace WindowsFormsApp
 
         private void lvFileExplorer_ColumnClick(object sender, ColumnClickEventArgs e)
         {
+            //Order
+
             if (e.Column == 0)
             {
                 if (col0Status == false)

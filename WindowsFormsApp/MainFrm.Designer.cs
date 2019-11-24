@@ -139,11 +139,12 @@
             this.lvFileExplorer.Location = new System.Drawing.Point(4, 0);
             this.lvFileExplorer.Margin = new System.Windows.Forms.Padding(4);
             this.lvFileExplorer.Name = "lvFileExplorer";
-            this.lvFileExplorer.Size = new System.Drawing.Size(845, 569);
+            this.lvFileExplorer.Size = new System.Drawing.Size(847, 569);
             this.lvFileExplorer.TabIndex = 1;
             this.lvFileExplorer.UseCompatibleStateImageBehavior = false;
             this.lvFileExplorer.View = System.Windows.Forms.View.Details;
             this.lvFileExplorer.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.lvFileExplorer_ColumnClick);
+            this.lvFileExplorer.ItemChecked += new System.Windows.Forms.ItemCheckedEventHandler(this.lvFileExplorer_ItemChecked);
             this.lvFileExplorer.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.lvFileExplorer_ItemSelectionChanged);
             // 
             // progressBar1
@@ -153,7 +154,7 @@
             this.progressBar1.Location = new System.Drawing.Point(4, 603);
             this.progressBar1.Margin = new System.Windows.Forms.Padding(4);
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(847, 30);
+            this.progressBar1.Size = new System.Drawing.Size(849, 30);
             this.progressBar1.TabIndex = 0;
             // 
             // tabPage2
