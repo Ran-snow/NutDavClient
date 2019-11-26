@@ -12,14 +12,14 @@ namespace DAL
     {
         public async static Task CrazyDowmload(string uri)
         {
-            using var httpCtient = new HttpClient();
+            using var httpClient = new HttpClient();
             using var request = new HttpRequestMessage
             {
                 RequestUri = new Uri(uri),
                 Method = HttpMethod.Head,
             };
 
-            var response = await httpCtient.SendAsync(request);
+            var response = await httpClient.SendAsync(request).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
             long? contentLength = response.Content.Headers.ContentLength;
 
@@ -28,8 +28,12 @@ namespace DAL
                 return;
             }
 
+            Console.WriteLine($"contentLength：{contentLength.Value}");
+            Console.WriteLine(response.Headers.ETag.Tag);
+
             List<Task> tasks = new List<Task>();
             long step = 1L << 20;
+            step *= 10;
 
             var blockCount = Math.Ceiling(contentLength.Value * 1.0 / step);
 
@@ -42,19 +46,37 @@ namespace DAL
                     end = contentLength.Value - 1;
                 }
 
-                tasks.Add(Down1oadBlock(i, uri, step, start, end));
+                tasks.Add(Down1oadBlockAsnyc(i, uri, step, start, end));
             }
 
             Task.WaitAll(tasks.ToArray());
 
+            using FileStream fileOut = new FileStream("666.exe", FileMode.Create);
+
+            int b;
+            for (int id = 0; id < blockCount; id++)
+            {
+                using FileStream fileStream = new FileStream($"{id}.dat", FileMode.Open);
+
+                while ((b = fileStream.ReadByte()) != -1)
+                {
+                    fileOut.WriteByte((byte)b);
+                }
+            }
+
+            for (int id = 0; id < blockCount; id++)
+            {
+                File.Delete($"{id}.dat");
+            }
+
             Console.WriteLine(contentLength);
         }
 
-        private async static Task Down1oadBlock(int id, string uri, long step, long start, long end)
+        private async static Task Down1oadBlockAsnyc(int id, string uri, long step, long start, long end)
         {
             await using FileStream file = new FileStream($"{id}.dat", FileMode.Create);
 
-            using var httpCtient = new HttpClient();
+            using var httpClient = new HttpClient();
             using var request = new HttpRequestMessage
             {
                 RequestUri = new Uri(uri),
@@ -65,7 +87,7 @@ namespace DAL
                 }
             };
 
-            using var response = await httpCtient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
             using var stream = await response.Content.ReadAsStreamAsync();
             var length = end - start + 1;
             var consumed = 0;
@@ -83,4 +105,3 @@ namespace DAL
         }
     }
 }
-  

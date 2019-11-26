@@ -8,10 +8,11 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>WindowsFormsApp</RootNamespace>
     <AssemblyName>WindowsFormsApp</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -85,6 +86,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\file.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DAL\DAL.csproj">
+      <Project>{C006019F-B974-4FCA-81F4-B83A719FD7ED}</Project>
+      <Name>DAL</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

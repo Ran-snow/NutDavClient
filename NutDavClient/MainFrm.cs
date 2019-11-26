@@ -1,4 +1,5 @@
-﻿using NutDavClient.Properties;
+﻿using DAL;
+using NutDavClient.Properties;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -76,6 +77,11 @@ namespace NutDavClient
         private void MainFrm_Load(object sender, EventArgs e)
         {
             PopulateTreeView();
+        }
+
+        private async void button1_Click(object sender, EventArgs e)
+        {
+            await HTTPHelper.CrazyDowmload("http://ftp.pconline.com.cn/b79d0cbdbfe166ad9337b855b3dc208f/pub/download/201010/Adobe_Reader_XI_zh_CN.exe");
         }
     }
 }

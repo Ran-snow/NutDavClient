@@ -45,7 +45,6 @@
             this.lvFileExplorer.Size = new System.Drawing.Size(660, 607);
             this.lvFileExplorer.TabIndex = 0;
             this.lvFileExplorer.UseCompatibleStateImageBehavior = false;
-            this.tvFiles.NodeMouseClick += TvFiles_NodeMouseClick;
             // 
             // progressBar1
             // 
@@ -65,6 +64,7 @@
             this.button1.TabIndex = 2;
             this.button1.Text = "Sync";
             this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // tvFiles
             // 
@@ -84,7 +84,6 @@
             this.label1.Size = new System.Drawing.Size(26, 17);
             this.label1.TabIndex = 4;
             this.label1.Text = "Tip";
-
             // 
             // MainFrm
             // 
