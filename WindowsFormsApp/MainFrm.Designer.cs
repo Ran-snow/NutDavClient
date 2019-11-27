@@ -38,6 +38,8 @@
             this.pbFile = new System.Windows.Forms.ProgressBar();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.lblSpeed = new System.Windows.Forms.Label();
+            this.lblTime = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -85,6 +87,8 @@
             // 
             // splitContainer1.Panel2
             // 
+            this.splitContainer1.Panel2.Controls.Add(this.lblTime);
+            this.splitContainer1.Panel2.Controls.Add(this.lblSpeed);
             this.splitContainer1.Panel2.Controls.Add(this.lblTip);
             this.splitContainer1.Panel2.Controls.Add(this.lvFileExplorer);
             this.splitContainer1.Panel2.Controls.Add(this.pbFile);
@@ -121,7 +125,7 @@
             // 
             this.lblTip.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblTip.AutoSize = true;
-            this.lblTip.Location = new System.Drawing.Point(4, 574);
+            this.lblTip.Location = new System.Drawing.Point(7, 577);
             this.lblTip.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblTip.Name = "lblTip";
             this.lblTip.Size = new System.Drawing.Size(55, 21);
@@ -178,6 +182,28 @@
             this.tabPage3.Text = "Setting";
             this.tabPage3.UseVisualStyleBackColor = true;
             // 
+            // lblSpeed
+            // 
+            this.lblSpeed.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.lblSpeed.AutoSize = true;
+            this.lblSpeed.Location = new System.Drawing.Point(740, 577);
+            this.lblSpeed.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblSpeed.Name = "lblSpeed";
+            this.lblSpeed.Size = new System.Drawing.Size(55, 21);
+            this.lblSpeed.TabIndex = 3;
+            this.lblSpeed.Text = "label1";
+            // 
+            // lblTime
+            // 
+            this.lblTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.lblTime.AutoSize = true;
+            this.lblTime.Location = new System.Drawing.Point(648, 577);
+            this.lblTime.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblTime.Name = "lblTime";
+            this.lblTime.Size = new System.Drawing.Size(55, 21);
+            this.lblTime.TabIndex = 4;
+            this.lblTime.Text = "label1";
+            // 
             // MainFrm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 21F);
@@ -213,5 +239,7 @@
         private System.Windows.Forms.ListView lvFileExplorer;
         private System.Windows.Forms.ProgressBar pbFile;
         private System.Windows.Forms.TabPage tabPage3;
+        private System.Windows.Forms.Label lblSpeed;
+        private System.Windows.Forms.Label lblTime;
     }
 }

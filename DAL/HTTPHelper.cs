@@ -12,17 +12,29 @@ namespace DAL
 {
     public class HTTPHelper
     {
-        public event Action<double, long> OnProgressHandler;
+        public event Action<string, int, double, long> OnProgressHandler;
         private static readonly object StaticLockObj = new object();
         private System.Timers.Timer timer;
+        private string fileName;
         private long totalLength = 0;
         private long realTimeLength = 0;
         private long lastlLength = 0;
+        private int timeCost = 0;
 
         public HTTPHelper()
         {
             timer = new System.Timers.Timer(1000);
             timer.Elapsed += Timer_Elapsed;
+        }
+
+        private void Reset()
+        {
+            fileName = string.Empty;
+            totalLength = 0;
+            realTimeLength = 0;
+            lastlLength = 0;
+            timeCost = 0;
+            timer.Enabled = false;
         }
 
         private void Timer_Elapsed(object sender, ElapsedEventArgs e)
@@ -32,7 +44,9 @@ namespace DAL
             long downloadSpeed = realTimeLength - lastlLength;
             lastlLength = realTimeLength;
 
-            OnProgressHandler?.Invoke(plannedSpeed, downloadSpeed);
+            timeCost++;
+
+            OnProgressHandler?.Invoke(fileName, timeCost, plannedSpeed, downloadSpeed);
         }
 
         public async Task CrazyDowmload(string uri, DirectoryInfo directoryInfo, int blockLength = 1)
@@ -62,6 +76,7 @@ namespace DAL
             List<Task> tasks = new List<Task>();
             long step = (1L << 20) * blockLength; // 2^10 * 2^10 == 1MB
             var blockCount = Math.Ceiling(contentLength.Value * 1.0 / step);
+            fileName = GetFileName(response);
             timer.Enabled = true;
             Console.WriteLine($"Start download ! total length{contentLength.Value}");
             for (int i = 0; i < blockCount; i++)
@@ -77,7 +92,7 @@ namespace DAL
             }
             Task.WaitAll(tasks.ToArray());
 
-            using (FileStream fileOut = new FileStream(Path.Combine(directoryInfo.FullName, GetFileName(response)), FileMode.Create))
+            using (FileStream fileOut = new FileStream(Path.Combine(directoryInfo.FullName, fileName), FileMode.Create))
             {
                 for (int id = 0; id < blockCount; id++)
                 {
@@ -93,7 +108,7 @@ namespace DAL
                 }
             }
 
-            timer.Enabled = false;
+            Reset();
             Console.WriteLine($"End download ! Enjoy yourself !");
         }
 

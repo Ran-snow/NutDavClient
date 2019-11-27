@@ -265,15 +265,16 @@ namespace WindowsFormsApp
         {
             try
             {
-                HTTPHelper hTTPHelper = new HTTPHelper();
-                hTTPHelper.OnProgressHandler += HTTPHelper_OnProgressHandler;
-                await hTTPHelper.CrazyDowmload(
+                HTTPHelper _HTTPHelper = new HTTPHelper();
+                _HTTPHelper.OnProgressHandler += HTTPHelper_OnProgressHandler;
+                await _HTTPHelper.CrazyDowmload(
                     "https://vscode.cdn.azure.cn/stable/f359dd69833dd8800b54d458f6d37ab7c78df520/VSCodeUserSetup-x64-1.40.2.exe"
                     , new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.Desktop))
                     , 3);
 
                 pbFile.Value = 0;
                 lblTip.Text = "Download successful";
+                lblSpeed.Text = string.Empty;
             }
             catch (Exception ex)
             {
@@ -281,10 +282,12 @@ namespace WindowsFormsApp
             }
         }
 
-        private void HTTPHelper_OnProgressHandler(double arg1, long arg2)
+        private void HTTPHelper_OnProgressHandler(string fileName, int costTime, double percentage, long speed)
         {
-            pbFile.Invoke(new MethodInvoker(()=> pbFile.Value = Convert.ToInt32(arg1 * 100)));
-            lblTip.Invoke(new MethodInvoker(()=> lblTip.Text = CalcSize(arg2) + "/s"));
+            pbFile.Invoke(new MethodInvoker(() => pbFile.Value = Convert.ToInt32(percentage * 100)));
+            lblSpeed.Invoke(new MethodInvoker(() => lblSpeed.Text = CalcSize(speed) + "/s"));
+            lblTip.Invoke(new MethodInvoker(() => lblTip.Text = fileName));
+            lblTime.Invoke(new MethodInvoker(() => lblTime.Text = costTime + "sec"));
         }
 
         private void lvFileExplorer_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
