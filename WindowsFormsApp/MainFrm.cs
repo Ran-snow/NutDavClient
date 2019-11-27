@@ -1,5 +1,4 @@
-﻿using DAL;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -263,7 +262,7 @@ namespace WindowsFormsApp
 
         private async void btnSync_Click(object sender, EventArgs e)
         {
-            await HTTPHelper.CrazyDowmload("http://ftp.pconline.com.cn/b79d0cbdbfe166ad9337b855b3dc208f/pub/download/201010/Adobe_Reader_XI_zh_CN.exe");
+            //await HTTPHelper.CrazyDowmload("http://ftp.pconline.com.cn/b79d0cbdbfe166ad9337b855b3dc208f/pub/download/201010/Adobe_Reader_XI_zh_CN.exe");
 
             MessageBox.Show(lvFileExplorer.CheckedItems.Count.ToString());
         }
