@@ -33,9 +33,9 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.btnSync = new System.Windows.Forms.Button();
             this.tvFiles = new System.Windows.Forms.TreeView();
-            this.label1 = new System.Windows.Forms.Label();
+            this.lblTip = new System.Windows.Forms.Label();
             this.lvFileExplorer = new System.Windows.Forms.ListView();
-            this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.pbFile = new System.Windows.Forms.ProgressBar();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.tabControl1.SuspendLayout();
@@ -85,9 +85,9 @@
             // 
             // splitContainer1.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.label1);
+            this.splitContainer1.Panel2.Controls.Add(this.lblTip);
             this.splitContainer1.Panel2.Controls.Add(this.lvFileExplorer);
-            this.splitContainer1.Panel2.Controls.Add(this.progressBar1);
+            this.splitContainer1.Panel2.Controls.Add(this.pbFile);
             this.splitContainer1.Size = new System.Drawing.Size(1131, 637);
             this.splitContainer1.SplitterDistance = 280;
             this.splitContainer1.SplitterWidth = 2;
@@ -117,16 +117,16 @@
             this.tvFiles.TabIndex = 0;
             this.tvFiles.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.tvFiles_NodeMouseClick);
             // 
-            // label1
+            // lblTip
             // 
-            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(4, 574);
-            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(55, 21);
-            this.label1.TabIndex = 2;
-            this.label1.Text = "label1";
+            this.lblTip.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.lblTip.AutoSize = true;
+            this.lblTip.Location = new System.Drawing.Point(4, 574);
+            this.lblTip.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblTip.Name = "lblTip";
+            this.lblTip.Size = new System.Drawing.Size(55, 21);
+            this.lblTip.TabIndex = 2;
+            this.lblTip.Text = "label1";
             // 
             // lvFileExplorer
             // 
@@ -139,7 +139,7 @@
             this.lvFileExplorer.Location = new System.Drawing.Point(4, 0);
             this.lvFileExplorer.Margin = new System.Windows.Forms.Padding(4);
             this.lvFileExplorer.Name = "lvFileExplorer";
-            this.lvFileExplorer.Size = new System.Drawing.Size(847, 569);
+            this.lvFileExplorer.Size = new System.Drawing.Size(849, 569);
             this.lvFileExplorer.TabIndex = 1;
             this.lvFileExplorer.UseCompatibleStateImageBehavior = false;
             this.lvFileExplorer.View = System.Windows.Forms.View.Details;
@@ -147,15 +147,15 @@
             this.lvFileExplorer.ItemChecked += new System.Windows.Forms.ItemCheckedEventHandler(this.lvFileExplorer_ItemChecked);
             this.lvFileExplorer.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.lvFileExplorer_ItemSelectionChanged);
             // 
-            // progressBar1
+            // pbFile
             // 
-            this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            this.pbFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar1.Location = new System.Drawing.Point(4, 603);
-            this.progressBar1.Margin = new System.Windows.Forms.Padding(4);
-            this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(849, 30);
-            this.progressBar1.TabIndex = 0;
+            this.pbFile.Location = new System.Drawing.Point(4, 603);
+            this.pbFile.Margin = new System.Windows.Forms.Padding(4);
+            this.pbFile.Name = "pbFile";
+            this.pbFile.Size = new System.Drawing.Size(851, 30);
+            this.pbFile.TabIndex = 0;
             // 
             // tabPage2
             // 
@@ -209,9 +209,9 @@
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.TreeView tvFiles;
         private System.Windows.Forms.Button btnSync;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label lblTip;
         private System.Windows.Forms.ListView lvFileExplorer;
-        private System.Windows.Forms.ProgressBar progressBar1;
+        private System.Windows.Forms.ProgressBar pbFile;
         private System.Windows.Forms.TabPage tabPage3;
     }
 }

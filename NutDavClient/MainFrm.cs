@@ -79,10 +79,9 @@ namespace NutDavClient
             PopulateTreeView();
         }
 
-        private async void button1_Click(object sender, EventArgs e)
+        private void button1_Click(object sender, EventArgs e)
         {
-            //await HTTPHelper.CrazyDowmload("https://www.baidu.com/");
-            await HTTPHelper.CrazyDowmload("https://vscode.cdn.azure.cn/stable/f359dd69833dd8800b54d458f6d37ab7c78df520/VSCodeUserSetup-x64-1.40.2.exe");
+           
         }
     }
 }

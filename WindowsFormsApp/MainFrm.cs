@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DAL;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -262,9 +263,28 @@ namespace WindowsFormsApp
 
         private async void btnSync_Click(object sender, EventArgs e)
         {
-            //await HTTPHelper.CrazyDowmload("http://ftp.pconline.com.cn/b79d0cbdbfe166ad9337b855b3dc208f/pub/download/201010/Adobe_Reader_XI_zh_CN.exe");
+            try
+            {
+                HTTPHelper hTTPHelper = new HTTPHelper();
+                hTTPHelper.OnProgressHandler += HTTPHelper_OnProgressHandler;
+                await hTTPHelper.CrazyDowmload(
+                    "https://vscode.cdn.azure.cn/stable/f359dd69833dd8800b54d458f6d37ab7c78df520/VSCodeUserSetup-x64-1.40.2.exe"
+                    , new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.Desktop))
+                    , 3);
 
-            MessageBox.Show(lvFileExplorer.CheckedItems.Count.ToString());
+                pbFile.Value = 0;
+                lblTip.Text = "Download successful";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        private void HTTPHelper_OnProgressHandler(double arg1, long arg2)
+        {
+            pbFile.Invoke(new MethodInvoker(()=> pbFile.Value = Convert.ToInt32(arg1 * 100)));
+            lblTip.Invoke(new MethodInvoker(()=> lblTip.Text = CalcSize(arg2) + "/s"));
         }
 
         private void lvFileExplorer_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)

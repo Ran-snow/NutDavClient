@@ -6,48 +6,64 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace DAL
 {
-    public static class HTTPHelper
+    public class HTTPHelper
     {
-        public async static Task CrazyDowmload(string uri)
+        public event Action<double, long> OnProgressHandler;
+        private static readonly object StaticLockObj = new object();
+        private System.Timers.Timer timer;
+        private long totalLength = 0;
+        private long realTimeLength = 0;
+        private long lastlLength = 0;
+
+        public HTTPHelper()
         {
-            GetHttpClient(new Uri(uri).Host);
-            using var httpClient = new HttpClient();
-            using var request = new HttpRequestMessage
+            timer = new System.Timers.Timer(1000);
+            timer.Elapsed += Timer_Elapsed;
+        }
+
+        private void Timer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            double plannedSpeed = Math.Round(realTimeLength * 1.0 / totalLength, 2);
+
+            long downloadSpeed = realTimeLength - lastlLength;
+            lastlLength = realTimeLength;
+
+            OnProgressHandler?.Invoke(plannedSpeed, downloadSpeed);
+        }
+
+        public async Task CrazyDowmload(string uri, DirectoryInfo directoryInfo, int blockLength = 1)
+        {
+            var request = new HttpRequestMessage
             {
                 RequestUri = new Uri(uri),
                 Method = HttpMethod.Head,
             };
 
-            var response = await httpClient.SendAsync(request).ConfigureAwait(false);
+            var response = await GetHttpClient(new Uri(uri).Host).SendAsync(request).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
             long? contentLength = response.Content.Headers.ContentLength;
-
             if (contentLength == null)
             {
-                Console.WriteLine($"contentLength  is null");
-                return;
+                throw new InvalidDataException("Response content is nil");
             }
-
-            //application/x-msdownload
+            else
+            {
+                totalLength = contentLength.Value;
+            }
             if (response.Content.Headers.ContentType.MediaType != "application/x-msdownload")
             {
-                Console.WriteLine($"Actural : {response.Content.Headers.ContentType.MediaType}");
-                return;
+                throw new InvalidDataException($"Response content mediaType is {response.Content.Headers.ContentType.MediaType}, not application/x-msdownload");
             }
 
-            Console.WriteLine($"contentLength：{contentLength.Value}");
-            Console.WriteLine(response.Headers.ETag?.Tag);
-
-            string fileName = GetFileName(response);
             List<Task> tasks = new List<Task>();
-            long step = 1L << 20;
-            step *= 10;
-
+            long step = (1L << 20) * blockLength; // 2^10 * 2^10 == 1MB
             var blockCount = Math.Ceiling(contentLength.Value * 1.0 / step);
-
+            timer.Enabled = true;
+            Console.WriteLine($"Start download ! total length{contentLength.Value}");
             for (int i = 0; i < blockCount; i++)
             {
                 long start = i * step;
@@ -57,30 +73,67 @@ namespace DAL
                     end = contentLength.Value - 1;
                 }
 
-                tasks.Add(Down1oadBlockAsnyc(i, uri, step, start, end));
+                tasks.Add(Down1oadBlockAsnyc(i, uri, response.Headers.ETag?.Tag, step, start, end));
             }
-
             Task.WaitAll(tasks.ToArray());
 
-            using FileStream fileOut = new FileStream(fileName, FileMode.Create);
-
-            int b;
-            for (int id = 0; id < blockCount; id++)
+            using (FileStream fileOut = new FileStream(Path.Combine(directoryInfo.FullName, GetFileName(response)), FileMode.Create))
             {
-                using FileStream fileStream = new FileStream($"{id}.dat", FileMode.Open);
-
-                while ((b = fileStream.ReadByte()) != -1)
+                for (int id = 0; id < blockCount; id++)
                 {
-                    fileOut.WriteByte((byte)b);
+                    using (FileStream fileStream = new FileStream($"{id}.dat", FileMode.Open))
+                    {
+                        int b;
+                        while ((b = fileStream.ReadByte()) != -1)
+                        {
+                            fileOut.WriteByte((byte)b);
+                        }
+                    }
+                    File.Delete($"{id}.dat");
                 }
             }
 
-            for (int id = 0; id < blockCount; id++)
-            {
-                File.Delete($"{id}.dat");
-            }
+            timer.Enabled = false;
+            Console.WriteLine($"End download ! Enjoy yourself !");
+        }
 
-            Console.WriteLine(contentLength);
+        private async Task Down1oadBlockAsnyc(int id, string uri, string etag, long step, long start, long end)
+        {
+            using (FileStream file = new FileStream($"{id}.dat", FileMode.Create))
+            {
+                var request = new HttpRequestMessage
+                {
+                    RequestUri = new Uri(uri),
+                    Method = HttpMethod.Get,
+                    Headers =
+                    {
+                        Range = new RangeHeaderValue(start,end)
+                    }
+                };
+
+                var response = await GetHttpClient(new Uri(uri).Host).SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+                if (response.Headers.ETag?.Tag != etag) throw new InvalidDataException("ETag is changed!");
+
+                using (var stream = await response.Content.ReadAsStreamAsync())
+                {
+                    var length = end - start + 1;
+                    var consumed = 0;
+                    var buffer = new byte[step];
+                    while (consumed < length)
+                    {
+                        var read = await stream.ReadAsync(buffer, 0, buffer.Length);
+                        await file.WriteAsync(buffer, 0, read);
+                        consumed += read;
+
+                        lock (StaticLockObj)
+                        {
+                            realTimeLength += read;
+                        }
+
+                        Console.WriteLine($"ID:{id} \t Thread:{Thread.CurrentThread.ManagedThreadId} \t {Math.Round(100 * consumed * 1.0 / length, 2)}%");
+                    }
+                }
+            }
         }
 
         private static string GetFileName(HttpResponseMessage response)
@@ -93,15 +146,14 @@ namespace DAL
 
             //2. URL
             string url = response.RequestMessage.RequestUri.AbsoluteUri;
-            if (response.RequestMessage.RequestUri.IsFile)
+            var files = url.Split('/');
+            if (files != null && (files.Length - 1) > 0)
             {
-                var files = url.Split('/');
-                if (files == null && (files.Length - 1) < 0)
+                var ext = files[files.Length - 1].Split('.');
+                if (ext != null && (ext.Length - 1) > 0)
                 {
-                    throw new HttpRequestException("file name is not reasonable");
+                    return files[files.Length - 1];
                 }
-
-                return files[files.Length - 1];
             }
 
             //3. 301
@@ -110,46 +162,16 @@ namespace DAL
             return Guid.NewGuid().ToString("N");
         }
 
-        private async static Task Down1oadBlockAsnyc(int id, string uri, long step, long start, long end)
-        {
-            await using FileStream file = new FileStream($"{id}.dat", FileMode.Create);
-
-            using var httpClient = new HttpClient();
-            using var request = new HttpRequestMessage
-            {
-                RequestUri = new Uri(uri),
-                Method = HttpMethod.Get,
-                Headers =
-                {
-                    Range = new RangeHeaderValue(start,end)
-                }
-            };
-
-            using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
-            using var stream = await response.Content.ReadAsStreamAsync();
-            var length = end - start + 1;
-            var consumed = 0;
-            var buffer = new byte[step];
-            while (consumed < length)
-            {
-                var read = await stream.ReadAsync(buffer);
-                await file.WriteAsync(buffer, 0, read);
-                consumed += read;
-
-                Console.WriteLine($"ID:{id} \t Thread:{Thread.CurrentThread.ManagedThreadId} \t {Math.Round(100 * consumed * 1.0 / length, 2)}%");
-            }
-
-            Console.WriteLine($"ID:{id} 完成");
-        }
-
         public static HttpClient GetHttpClient(string uri)
         {
             ConcurrentDictionary<string, HttpClient> httpclients = new ConcurrentDictionary<string, HttpClient>();
 
-            if (httpclients.ContainsKey(uri))
+            if (!httpclients.ContainsKey(uri))
             {
-                
+                httpclients.TryAdd(uri, new HttpClient());
             }
+
+            return httpclients[uri];
         }
     }
 }
