@@ -14,7 +14,8 @@ namespace DAL
     {
         public event Action<string, int, double, long> OnProgressHandler;
         private static readonly object StaticLockObj = new object();
-        CancellationTokenSource cancellationTokenSource;
+        private CancellationTokenSource cancellationTokenSource;
+        private AuthenticationHeaderValue authentication;
         private System.Timers.Timer timer;
         private string fileName;
         private long totalLength = 0;
@@ -28,6 +29,11 @@ namespace DAL
             timer.Elapsed += Timer_Elapsed;
         }
 
+        public HTTPHelper(AuthenticationHeaderValue authentication) : this()
+        {
+            this.authentication = authentication;
+        }
+
         public HTTPHelper(CancellationTokenSource cancellationToken) : this()
         {
             if (cancellationToken != null)
@@ -38,6 +44,11 @@ namespace DAL
             {
                 this.cancellationTokenSource = new CancellationTokenSource();
             }
+        }
+
+        public HTTPHelper(AuthenticationHeaderValue authentication, CancellationTokenSource cancellationToken) : this(cancellationToken)
+        {
+            this.authentication = authentication;
         }
 
         private void Reset()
@@ -70,6 +81,10 @@ namespace DAL
                 {
                     RequestUri = new Uri(uri),
                     Method = HttpMethod.Head,
+                    Headers =
+                    {
+                        Authorization = authentication
+                    }
                 };
 
                 var response = await GetHttpClient(new Uri(uri).Host).SendAsync(request, cancellationTokenSource.Token).ConfigureAwait(false);
@@ -146,7 +161,8 @@ namespace DAL
                     Method = HttpMethod.Get,
                     Headers =
                     {
-                        Range = new RangeHeaderValue(start,end)
+                        Range = new RangeHeaderValue(start,end),
+                        Authorization = authentication
                     }
                 };
 
