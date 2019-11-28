@@ -8,9 +8,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 
-namespace DAL
+namespace WebDAVClient
 {
-    public class HTTPHelper
+    public class DownloadHelper
     {
         public event Action<string, int, double, long> OnProgressHandler;
         private static readonly object StaticLockObj = new object();
@@ -23,18 +23,18 @@ namespace DAL
         private long lastlLength = 0;
         private int timeCost = 0;
 
-        public HTTPHelper()
+        public DownloadHelper()
         {
             timer = new System.Timers.Timer(1000);
             timer.Elapsed += Timer_Elapsed;
         }
 
-        public HTTPHelper(AuthenticationHeaderValue authentication) : this()
+        public DownloadHelper(AuthenticationHeaderValue authentication) : this()
         {
             this.authentication = authentication;
         }
 
-        public HTTPHelper(CancellationTokenSource cancellationToken) : this()
+        public DownloadHelper(CancellationTokenSource cancellationToken) : this()
         {
             if (cancellationToken != null)
             {
@@ -46,7 +46,7 @@ namespace DAL
             }
         }
 
-        public HTTPHelper(AuthenticationHeaderValue authentication, CancellationTokenSource cancellationToken) : this(cancellationToken)
+        public DownloadHelper(AuthenticationHeaderValue authentication, CancellationTokenSource cancellationToken) : this(cancellationToken)
         {
             this.authentication = authentication;
         }
@@ -73,7 +73,7 @@ namespace DAL
             OnProgressHandler?.Invoke(fileName, timeCost, plannedSpeed, downloadSpeed);
         }
 
-        public async Task CrazyDowmload(string uri, DirectoryInfo directoryInfo, int blockLength = 1)
+        public async Task CrazyDownload(string uri, DirectoryInfo directoryInfo, int blockLength = 1)
         {
             try
             {
@@ -219,13 +219,13 @@ namespace DAL
             return Guid.NewGuid().ToString("N");
         }
 
-        public static HttpClient GetHttpClient(string uri)
+        public static System.Net.Http.HttpClient GetHttpClient(string uri)
         {
-            ConcurrentDictionary<string, HttpClient> httpclients = new ConcurrentDictionary<string, HttpClient>();
+            ConcurrentDictionary<string, System.Net.Http.HttpClient> httpclients = new ConcurrentDictionary<string, System.Net.Http.HttpClient>();
 
             if (!httpclients.ContainsKey(uri))
             {
-                httpclients.TryAdd(uri, new HttpClient());
+                httpclients.TryAdd(uri, new System.Net.Http.HttpClient());
             }
 
             return httpclients[uri];

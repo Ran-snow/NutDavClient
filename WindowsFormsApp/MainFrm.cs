@@ -1,5 +1,4 @@
-﻿using DAL;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -12,6 +11,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsFormsApp.Properties;
+using WebDAVClient;
+using System.Net;
 
 namespace WindowsFormsApp
 {
@@ -288,9 +289,9 @@ namespace WindowsFormsApp
                 CancellationTokenSource cts = new CancellationTokenSource();
                 //cts.CancelAfter(30 * 1000);
 
-                HTTPHelper _HTTPHelper = new HTTPHelper(cts);
+                DownloadHelper _HTTPHelper = new DownloadHelper(cts);
                 _HTTPHelper.OnProgressHandler += HTTPHelper_OnProgressHandler;
-                await _HTTPHelper.CrazyDowmload(
+                await _HTTPHelper.CrazyDownload(
                     "https://vscode.cdn.azure.cn/stable/f359dd69833dd8800b54d458f6d37ab7c78df520/VSCodeUserSetup-x64-1.40.2.exe"
                     , new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.Desktop))
                     , 3);
@@ -406,6 +407,14 @@ namespace WindowsFormsApp
                 }
                 col3Status = !col3Status;
             }
+        }
+
+        private async void btnTest_Click(object sender, EventArgs e)
+        {
+            // Basic authentication required
+
+            // List items in the root folder
+            var files = await c.List();
         }
     }
 }

@@ -33,19 +33,21 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.btnSync = new System.Windows.Forms.Button();
             this.tvFiles = new System.Windows.Forms.TreeView();
+            this.lblTime = new System.Windows.Forms.Label();
+            this.lblSpeed = new System.Windows.Forms.Label();
             this.lblTip = new System.Windows.Forms.Label();
             this.lvFileExplorer = new System.Windows.Forms.ListView();
             this.pbFile = new System.Windows.Forms.ProgressBar();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.tabPage3 = new System.Windows.Forms.TabPage();
-            this.lblSpeed = new System.Windows.Forms.Label();
-            this.lblTime = new System.Windows.Forms.Label();
+            this.btnTest = new System.Windows.Forms.Button();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
+            this.tabPage2.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControl1
@@ -121,6 +123,28 @@
             this.tvFiles.TabIndex = 0;
             this.tvFiles.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.tvFiles_NodeMouseClick);
             // 
+            // lblTime
+            // 
+            this.lblTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.lblTime.AutoSize = true;
+            this.lblTime.Location = new System.Drawing.Point(648, 577);
+            this.lblTime.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblTime.Name = "lblTime";
+            this.lblTime.Size = new System.Drawing.Size(55, 21);
+            this.lblTime.TabIndex = 4;
+            this.lblTime.Text = "label1";
+            // 
+            // lblSpeed
+            // 
+            this.lblSpeed.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.lblSpeed.AutoSize = true;
+            this.lblSpeed.Location = new System.Drawing.Point(740, 577);
+            this.lblSpeed.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblSpeed.Name = "lblSpeed";
+            this.lblSpeed.Size = new System.Drawing.Size(55, 21);
+            this.lblSpeed.TabIndex = 3;
+            this.lblSpeed.Text = "label1";
+            // 
             // lblTip
             // 
             this.lblTip.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
@@ -143,7 +167,7 @@
             this.lvFileExplorer.Location = new System.Drawing.Point(4, 0);
             this.lvFileExplorer.Margin = new System.Windows.Forms.Padding(4);
             this.lvFileExplorer.Name = "lvFileExplorer";
-            this.lvFileExplorer.Size = new System.Drawing.Size(849, 569);
+            this.lvFileExplorer.Size = new System.Drawing.Size(851, 569);
             this.lvFileExplorer.TabIndex = 1;
             this.lvFileExplorer.UseCompatibleStateImageBehavior = false;
             this.lvFileExplorer.View = System.Windows.Forms.View.Details;
@@ -158,11 +182,12 @@
             this.pbFile.Location = new System.Drawing.Point(4, 603);
             this.pbFile.Margin = new System.Windows.Forms.Padding(4);
             this.pbFile.Name = "pbFile";
-            this.pbFile.Size = new System.Drawing.Size(851, 30);
+            this.pbFile.Size = new System.Drawing.Size(853, 30);
             this.pbFile.TabIndex = 0;
             // 
             // tabPage2
             // 
+            this.tabPage2.Controls.Add(this.btnTest);
             this.tabPage2.Location = new System.Drawing.Point(4, 30);
             this.tabPage2.Margin = new System.Windows.Forms.Padding(5);
             this.tabPage2.Name = "tabPage2";
@@ -182,27 +207,15 @@
             this.tabPage3.Text = "Setting";
             this.tabPage3.UseVisualStyleBackColor = true;
             // 
-            // lblSpeed
+            // btnTest
             // 
-            this.lblSpeed.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.lblSpeed.AutoSize = true;
-            this.lblSpeed.Location = new System.Drawing.Point(740, 577);
-            this.lblSpeed.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.lblSpeed.Name = "lblSpeed";
-            this.lblSpeed.Size = new System.Drawing.Size(55, 21);
-            this.lblSpeed.TabIndex = 3;
-            this.lblSpeed.Text = "label1";
-            // 
-            // lblTime
-            // 
-            this.lblTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.lblTime.AutoSize = true;
-            this.lblTime.Location = new System.Drawing.Point(648, 577);
-            this.lblTime.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.lblTime.Name = "lblTime";
-            this.lblTime.Size = new System.Drawing.Size(55, 21);
-            this.lblTime.TabIndex = 4;
-            this.lblTime.Text = "label1";
+            this.btnTest.Location = new System.Drawing.Point(234, 148);
+            this.btnTest.Name = "btnTest";
+            this.btnTest.Size = new System.Drawing.Size(75, 32);
+            this.btnTest.TabIndex = 0;
+            this.btnTest.Text = "button1";
+            this.btnTest.UseVisualStyleBackColor = true;
+            this.btnTest.Click += new System.EventHandler(this.btnTest_Click);
             // 
             // MainFrm
             // 
@@ -223,6 +236,7 @@
             this.splitContainer1.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
+            this.tabPage2.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -241,5 +255,6 @@
         private System.Windows.Forms.TabPage tabPage3;
         private System.Windows.Forms.Label lblSpeed;
         private System.Windows.Forms.Label lblTime;
+        private System.Windows.Forms.Button btnTest;
     }
 }
