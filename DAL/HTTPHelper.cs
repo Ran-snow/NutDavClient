@@ -14,6 +14,7 @@ namespace DAL
     {
         public event Action<string, int, double, long> OnProgressHandler;
         private static readonly object StaticLockObj = new object();
+        CancellationTokenSource cancellationTokenSource;
         private System.Timers.Timer timer;
         private string fileName;
         private long totalLength = 0;
@@ -25,6 +26,18 @@ namespace DAL
         {
             timer = new System.Timers.Timer(1000);
             timer.Elapsed += Timer_Elapsed;
+        }
+
+        public HTTPHelper(CancellationTokenSource cancellationToken) : this()
+        {
+            if (cancellationToken != null)
+            {
+                this.cancellationTokenSource = cancellationToken;
+            }
+            else
+            {
+                this.cancellationTokenSource = new CancellationTokenSource();
+            }
         }
 
         private void Reset()
@@ -51,65 +64,76 @@ namespace DAL
 
         public async Task CrazyDowmload(string uri, DirectoryInfo directoryInfo, int blockLength = 1)
         {
-            var request = new HttpRequestMessage
+            try
             {
-                RequestUri = new Uri(uri),
-                Method = HttpMethod.Head,
-            };
-
-            var response = await GetHttpClient(new Uri(uri).Host).SendAsync(request).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
-            long? contentLength = response.Content.Headers.ContentLength;
-            if (contentLength == null)
-            {
-                throw new InvalidDataException("Response content is nil");
-            }
-            else
-            {
-                totalLength = contentLength.Value;
-            }
-            if (response.Content.Headers.ContentType.MediaType != "application/x-msdownload")
-            {
-                throw new InvalidDataException($"Response content mediaType is {response.Content.Headers.ContentType.MediaType}, not application/x-msdownload");
-            }
-
-            List<Task> tasks = new List<Task>();
-            long step = (1L << 20) * blockLength; // 2^10 * 2^10 == 1MB
-            var blockCount = Math.Ceiling(contentLength.Value * 1.0 / step);
-            fileName = GetFileName(response);
-            timer.Enabled = true;
-            Console.WriteLine($"Start download ! total length{contentLength.Value}");
-            for (int i = 0; i < blockCount; i++)
-            {
-                long start = i * step;
-                long end = (i + 1) * step - 1;
-                if ((contentLength.Value - 1) < end)
+                var request = new HttpRequestMessage
                 {
-                    end = contentLength.Value - 1;
+                    RequestUri = new Uri(uri),
+                    Method = HttpMethod.Head,
+                };
+
+                var response = await GetHttpClient(new Uri(uri).Host).SendAsync(request, cancellationTokenSource.Token).ConfigureAwait(false);
+                response.EnsureSuccessStatusCode();
+                long? contentLength = response.Content.Headers.ContentLength;
+                if (contentLength == null)
+                {
+                    throw new InvalidDataException("Response content is nil");
+                }
+                else
+                {
+                    totalLength = contentLength.Value;
+                }
+                if (response.Content.Headers.ContentType.MediaType != "application/x-msdownload")
+                {
+                    throw new InvalidDataException($"Response content mediaType is {response.Content.Headers.ContentType.MediaType}, not application/x-msdownload");
                 }
 
-                tasks.Add(Down1oadBlockAsnyc(i, uri, response.Headers.ETag?.Tag, step, start, end));
-            }
-            Task.WaitAll(tasks.ToArray());
-
-            using (FileStream fileOut = new FileStream(Path.Combine(directoryInfo.FullName, fileName), FileMode.Create))
-            {
-                for (int id = 0; id < blockCount; id++)
+                List<Task> tasks = new List<Task>();
+                long step = (1L << 20) * blockLength; // 2^10 * 2^10 == 1MB
+                var blockCount = Math.Ceiling(contentLength.Value * 1.0 / step);
+                fileName = GetFileName(response);
+                timer.Enabled = true;
+                Console.WriteLine($"Start download ! total length{contentLength.Value}");
+                for (int i = 0; i < blockCount; i++)
                 {
-                    using (FileStream fileStream = new FileStream($"{id}.dat", FileMode.Open))
+                    long start = i * step;
+                    long end = (i + 1) * step - 1;
+                    if ((contentLength.Value - 1) < end)
                     {
-                        int b;
-                        while ((b = fileStream.ReadByte()) != -1)
-                        {
-                            fileOut.WriteByte((byte)b);
-                        }
+                        end = contentLength.Value - 1;
                     }
-                    File.Delete($"{id}.dat");
-                }
-            }
 
-            Reset();
-            Console.WriteLine($"End download ! Enjoy yourself !");
+                    tasks.Add(Down1oadBlockAsnyc(i, uri, response.Headers.ETag?.Tag, step, start, end));
+                }
+                Task.WaitAll(tasks.ToArray());
+
+                using (FileStream fileOut = new FileStream(Path.Combine(directoryInfo.FullName, fileName), FileMode.Create))
+                {
+                    for (int id = 0; id < blockCount; id++)
+                    {
+                        using (FileStream fileStream = new FileStream($"{id}.dat", FileMode.Open))
+                        {
+                            int b;
+                            while ((b = fileStream.ReadByte()) != -1)
+                            {
+                                fileOut.WriteByte((byte)b);
+                            }
+                        }
+                        File.Delete($"{id}.dat");
+                    }
+                }
+
+                Console.WriteLine($"End download ! Enjoy yourself !");
+            }
+            catch (Exception ex)
+            {
+                cancellationTokenSource.Cancel();
+                throw ex;
+            }
+            finally
+            {
+                Reset();
+            }
         }
 
         private async Task Down1oadBlockAsnyc(int id, string uri, string etag, long step, long start, long end)
@@ -126,7 +150,7 @@ namespace DAL
                     }
                 };
 
-                var response = await GetHttpClient(new Uri(uri).Host).SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+                var response = await GetHttpClient(new Uri(uri).Host).SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationTokenSource.Token).ConfigureAwait(false);
                 if (response.Headers.ETag?.Tag != etag) throw new InvalidDataException("ETag is changed!");
 
                 using (var stream = await response.Content.ReadAsStreamAsync())
@@ -136,8 +160,10 @@ namespace DAL
                     var buffer = new byte[step];
                     while (consumed < length)
                     {
-                        var read = await stream.ReadAsync(buffer, 0, buffer.Length);
-                        await file.WriteAsync(buffer, 0, read);
+                        cancellationTokenSource.Token.ThrowIfCancellationRequested();
+
+                        var read = await stream.ReadAsync(buffer, 0, buffer.Length, cancellationTokenSource.Token);
+                        await file.WriteAsync(buffer, 0, read, cancellationTokenSource.Token);
                         consumed += read;
 
                         lock (StaticLockObj)

@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsFormsApp.Properties;
@@ -265,7 +266,10 @@ namespace WindowsFormsApp
         {
             try
             {
-                HTTPHelper _HTTPHelper = new HTTPHelper();
+                CancellationTokenSource cts = new CancellationTokenSource();
+                //cts.CancelAfter(30 * 1000);
+
+                HTTPHelper _HTTPHelper = new HTTPHelper(cts);
                 _HTTPHelper.OnProgressHandler += HTTPHelper_OnProgressHandler;
                 await _HTTPHelper.CrazyDowmload(
                     "https://vscode.cdn.azure.cn/stable/f359dd69833dd8800b54d458f6d37ab7c78df520/VSCodeUserSetup-x64-1.40.2.exe"
@@ -278,6 +282,11 @@ namespace WindowsFormsApp
             }
             catch (Exception ex)
             {
+                if (ex.InnerException != null)
+                {
+                    MessageBox.Show(ex.InnerException.Message);
+                }
+
                 MessageBox.Show(ex.Message);
             }
         }
