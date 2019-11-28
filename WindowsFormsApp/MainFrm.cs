@@ -168,6 +168,25 @@ namespace WindowsFormsApp
             }
         }
 
+        private string CalcTime(int sec)
+        {
+            if (sec < 60)
+            {
+                return sec + "sec";
+            }
+            else if (sec < (60 * 60))
+            {
+                int min = sec / 60;
+                return min + "min" + (sec - min * 60) + "sec";
+            }
+            else
+            {
+                int hour = sec / (60 * 60);
+                int min = (sec - (hour * 60 * 60)) / 60;
+                return hour + "hour" + min + "min" + (sec - (hour * 60 * 60 + min * 60)) + "sec";
+            }
+        }
+
         #endregion
 
         private void MainFrm_Load(object sender, EventArgs e)
@@ -296,7 +315,7 @@ namespace WindowsFormsApp
             pbFile.Invoke(new MethodInvoker(() => pbFile.Value = Convert.ToInt32(percentage * 100)));
             lblSpeed.Invoke(new MethodInvoker(() => lblSpeed.Text = CalcSize(speed) + "/s"));
             lblTip.Invoke(new MethodInvoker(() => lblTip.Text = fileName));
-            lblTime.Invoke(new MethodInvoker(() => lblTime.Text = costTime + "sec"));
+            lblTime.Invoke(new MethodInvoker(() => lblTime.Text = CalcTime(costTime)));
         }
 
         private void lvFileExplorer_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
