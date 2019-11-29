@@ -98,7 +98,8 @@ namespace WebDAVClient
                 {
                     totalLength = contentLength.Value;
                 }
-                if (response.Content.Headers.ContentType.MediaType != "application/x-msdownload")
+                List<string> types = new List<string> { "application/x-msdownload" };
+                if (!types.Contains(response.Content.Headers.ContentType.MediaType))
                 {
                     throw new InvalidDataException($"Response content mediaType is {response.Content.Headers.ContentType.MediaType}, not application/x-msdownload");
                 }

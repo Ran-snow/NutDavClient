@@ -411,10 +411,7 @@ namespace WindowsFormsApp
 
         private async void btnTest_Click(object sender, EventArgs e)
         {
-            // Basic authentication required
-
-            // List items in the root folder
-            var files = await c.List();
+            
         }
     }
 }

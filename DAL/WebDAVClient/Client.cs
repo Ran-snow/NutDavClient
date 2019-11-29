@@ -41,13 +41,13 @@ namespace WebDAVClient
             //"  </prop> " +
             "</propfind>";
 
-        private static readonly string AssemblyVersion = typeof (IClient).Assembly.GetName().Version.ToString();
+        private static readonly string AssemblyVersion = typeof(IClient).Assembly.GetName().Version.ToString();
 
         private readonly IHttpClientWrapper _httpClientWrapper;
         private string _server;
         private string _basePath = "/";
         private string _encodedBasePath;
-        
+
 
 
         #region WebDAV connection parameters
@@ -90,7 +90,7 @@ namespace WebDAVClient
         /// Specify the UserAgent (and UserAgent version) string to use in requests
         /// </summary>
         public string UserAgent { get; set; }
-        
+
         /// <summary>
         /// Specify the UserAgent (and UserAgent version) string to use in requests
         /// </summary>
@@ -127,7 +127,7 @@ namespace WebDAVClient
             var client = new System.Net.Http.HttpClient(handler);
             client.DefaultRequestHeaders.ExpectContinue = false;
 
-            System.Net.Http.HttpClient uploadClient = null; 
+            System.Net.Http.HttpClient uploadClient = null;
             if (uploadTimeout != null)
             {
                 uploadClient = new System.Net.Http.HttpClient(handler);
@@ -178,9 +178,9 @@ namespace WebDAVClient
                 response = await HttpRequest(listUri.Uri, PropFind, headers, Encoding.UTF8.GetBytes(PropFindRequestContent)).ConfigureAwait(false);
 
                 if (response.StatusCode != HttpStatusCode.OK &&
-                    (int) response.StatusCode != HttpStatusCode_MultiStatus)
+                    (int)response.StatusCode != HttpStatusCode_MultiStatus)
                 {
-                    throw new WebDAVException((int) response.StatusCode, "Failed retrieving items in folder.");
+                    throw new WebDAVException((int)response.StatusCode, "Failed retrieving items in folder.");
                 }
 
                 using (var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
@@ -254,7 +254,7 @@ namespace WebDAVClient
             // Depth header: http://webdav.org/specs/rfc4918.html#rfc.section.9.1.4
             IDictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add("Depth", "0");
-            
+
             if (CustomHeaders != null)
             {
                 foreach (var keyValuePair in CustomHeaders)
@@ -271,7 +271,7 @@ namespace WebDAVClient
                 response = await HttpRequest(listUri, PropFind, headers, Encoding.UTF8.GetBytes(PropFindRequestContent)).ConfigureAwait(false);
 
                 if (response.StatusCode != HttpStatusCode.OK &&
-                    (int) response.StatusCode != HttpStatusCode_MultiStatus)
+                    (int)response.StatusCode != HttpStatusCode_MultiStatus)
                 {
                     throw new WebDAVException((int)response.StatusCode, string.Format("Failed retrieving item/folder (Status Code: {0})", response.StatusCode));
                 }
@@ -352,7 +352,7 @@ namespace WebDAVClient
                     headers.Add(keyValuePair);
                 }
             }
-            
+
             HttpResponseMessage response = null;
 
             try
@@ -363,7 +363,7 @@ namespace WebDAVClient
                     response.StatusCode != HttpStatusCode.NoContent &&
                     response.StatusCode != HttpStatusCode.Created)
                 {
-                    throw new WebDAVException((int) response.StatusCode, "Failed uploading file.");
+                    throw new WebDAVException((int)response.StatusCode, "Failed uploading file.");
                 }
 
                 return response.IsSuccessStatusCode;
@@ -436,7 +436,7 @@ namespace WebDAVClient
                     headers.Add(keyValuePair);
                 }
             }
-            
+
             HttpResponseMessage response = null;
 
             try
@@ -444,7 +444,7 @@ namespace WebDAVClient
                 response = await HttpRequest(dirUri.Uri, MkCol, headers).ConfigureAwait(false);
 
                 if (response.StatusCode == HttpStatusCode.Conflict)
-                    throw new WebDAVConflictException((int) response.StatusCode, "Failed creating folder.");
+                    throw new WebDAVConflictException((int)response.StatusCode, "Failed creating folder.");
 
                 if (response.StatusCode != HttpStatusCode.OK &&
                     response.StatusCode != HttpStatusCode.NoContent &&
@@ -457,7 +457,7 @@ namespace WebDAVClient
             }
             finally
             {
-                if (response!= null)
+                if (response != null)
                     response.Dispose();
             }
         }
@@ -485,7 +485,7 @@ namespace WebDAVClient
                     headers.Add(keyValuePair);
                 }
             }
-            
+
             var response = await HttpRequest(listUri, HttpMethod.Delete, headers).ConfigureAwait(false);
 
             if (response.StatusCode != HttpStatusCode.OK &&
@@ -538,7 +538,7 @@ namespace WebDAVClient
 
             IDictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add("Destination", dstUri.ToString());
-            
+
             if (CustomHeaders != null)
             {
                 foreach (var keyValuePair in CustomHeaders)
@@ -546,7 +546,7 @@ namespace WebDAVClient
                     headers.Add(keyValuePair);
                 }
             }
-            
+
             var response = await HttpRequest(srcUri, MoveMethod, headers, Encoding.UTF8.GetBytes(requestContent)).ConfigureAwait(false);
 
             if (response.StatusCode != HttpStatusCode.OK &&
@@ -693,19 +693,12 @@ namespace WebDAVClient
 
         private async Task<UriBuilder> GetServerUrl(string path, bool appendTrailingSlash)
         {
-            if (Server.StartsWith("https"))
-            {
-                Port = 443;
-            }
-            else
-            {
-                Port = 80;
-            }
+            Port = Server.StartsWith("https") ? 443 : 80;
 
             // Resolve the base path on the server
             if (_encodedBasePath == null)
             {
-                var baseUri = new UriBuilder(_server) {Path = _basePath, Port = (int)Port};
+                var baseUri = new UriBuilder(_server) { Path = _basePath, Port = (int)Port };
                 var root = await Get(baseUri.Uri).ConfigureAwait(false);
 
                 _encodedBasePath = root.Href;
@@ -722,7 +715,7 @@ namespace WebDAVClient
                 }
 
                 // Otherwise, use the resolved base path relatively to the server
-                var baseUri = new UriBuilder(_server) {Path = _encodedBasePath, Port = (int)Port};
+                var baseUri = new UriBuilder(_server) { Path = _encodedBasePath, Port = (int)Port };
                 return baseUri;
             }
 
@@ -754,14 +747,14 @@ namespace WebDAVClient
                     var finalPath = path;
                     if (!finalPath.StartsWith(_encodedBasePath, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        finalPath = _encodedBasePath.TrimEnd('/') + "/" + path;
+                        finalPath = _encodedBasePath.TrimEnd('/') + "/" + path.Trim('/');
                     }
                     if (appendTrailingSlash)
                         finalPath = finalPath.TrimEnd('/') + "/";
 
                     baseUri.Path = finalPath;
                 }
-                
+
 
                 return baseUri;
             }
