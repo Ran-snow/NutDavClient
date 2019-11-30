@@ -101,7 +101,6 @@
 
         #endregion
 
-        private System.Windows.Forms.Button btnSetting;
         private System.Windows.Forms.ListView lvFileExplorer;
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.Button button1;

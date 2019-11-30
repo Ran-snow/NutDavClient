@@ -45,7 +45,6 @@ namespace WebDAVClient
 
         private readonly IHttpClientWrapper _httpClientWrapper;
         private string _server;
-        private string _basePath = "/";
         private string _encodedBasePath;
 
         public event Action<int, double, long> OnProgressHandler;
@@ -58,33 +57,60 @@ namespace WebDAVClient
         public string Server
         {
             get { return _server; }
-            set
-            {
-                value = value.TrimEnd('/');
-                _server = value;
-            }
+        }
+
+        public void SetServer(string server)
+        {
+            _server = server.TrimEnd('/');
         }
 
         /// <summary>
         /// Specify the path of a WebDAV directory to use as 'root' (default: /)
         /// </summary>
-        public string BasePath
+        public string BasePath { get; private set; } = "/";
+
+        /// <summary>
+        /// Specify the path of a WebDAV directory to use as 'root' (default: /)
+        /// </summary>
+        /// <param name="basePath"></param>
+        public async Task SetBasePath(string basePath)
         {
-            get { return _basePath; }
-            set
+            basePath = basePath.Trim('/');
+            if (string.IsNullOrEmpty(basePath))
             {
-                value = value.Trim('/');
-                if (string.IsNullOrEmpty(value))
-                    _basePath = "/";
-                else
-                    _basePath = "/" + value + "/";
+                BasePath = "/";
             }
+            else
+            {
+                BasePath = "/" + basePath + "/";
+            }
+
+            if (string.IsNullOrEmpty(Server))
+            {
+                throw new WebDAVException("Please set server before basePath");
+            }
+
+            if (Port == null)
+            {
+                SetPort(Server.StartsWith("https") ? 443 : 80);
+            }
+
+            await SetEncodedBasePath();
         }
 
         /// <summary>
         /// Specify an port (default: null = auto-detect)
         /// </summary>
-        public int? Port { get; set; }
+        public int? Port { get; private set; }
+
+        /// <summary>
+        /// Specify an port (default: null = auto-detect)
+        /// </summary>
+        /// <param name="port"></param>
+        public void SetPort(int port)
+        {
+            Port = port;
+        }
 
         /// <summary>
         /// Specify the UserAgent (and UserAgent version) string to use in requests
@@ -170,7 +196,6 @@ namespace WebDAVClient
                 }
             }
 
-
             HttpResponseMessage response = null;
 
             try
@@ -242,7 +267,6 @@ namespace WebDAVClient
             var listUri = await GetServerUrl(path, false).ConfigureAwait(false);
             return await Get(listUri.Uri).ConfigureAwait(false);
         }
-
 
         /// <summary>
         /// List all files present on the server.
@@ -331,7 +355,7 @@ namespace WebDAVClient
             return await DownloadFile(remoteFilePath, headers);
         }
 
-        private async Task<Stream> DownloadPartial(TransmissionHelper transmissionHelper, string remoteFilePath, long startBytes, long endBytes, long step)
+        private async Task DownloadPartial(string id, TransmissionHelper transmissionHelper, string remoteFilePath, long startBytes, long endBytes, long step)
         {
             var headers = new Dictionary<string, string> { { "translate", "f" }, { "Range", "bytes=" + startBytes + "-" + endBytes } };
             if (CustomHeaders != null)
@@ -342,6 +366,7 @@ namespace WebDAVClient
                 }
             }
 
+            using (FileStream file = new FileStream($"{id}.dat", FileMode.Create))
             using (var stream = await DownloadFile(remoteFilePath, headers))
             {
                 var length = endBytes - startBytes + 1;
@@ -349,76 +374,89 @@ namespace WebDAVClient
                 var buffer = new byte[step];
                 while (consumed < length)
                 {
-
                     var read = await stream.ReadAsync(buffer, 0, buffer.Length);
+                    await file.WriteAsync(buffer, 0, read);
                     consumed += read;
                     transmissionHelper.IncreaseRealTimeLength(read);
                 }
-
-                //stream.Seek(0, SeekOrigin.Begin);
-                return stream;
             }
-
         }
 
-        public async Task<Stream> DownloadCrazy(string remoteFilePath, int blockLength = 1)
+        public async Task DownloadCrazy(Item remoteFile, DirectoryInfo localFileDirectory, int blockLength = 1)
         {
+
             TransmissionHelper transmissionHelper = new TransmissionHelper();
             transmissionHelper.OnProgressHandler += (timeCost, plannedSpeed, downloadSpeed) =>
             {
                 this.OnProgressHandler?.Invoke(timeCost, plannedSpeed, downloadSpeed);
             };
 
-            var headers = new Dictionary<string, string> { { "translate", "f" } };
-            if (CustomHeaders != null)
+            try
             {
-                foreach (var keyValuePair in CustomHeaders)
+                if (remoteFile == null || remoteFile.IsCollection || remoteFile.ContentLength == null)
                 {
-                    headers.Add(keyValuePair.Key, keyValuePair.Value);
-                }
-            }
-
-            var downloadUri = await GetServerUrl(remoteFilePath, false).ConfigureAwait(false);
-            var response = await HttpRequest(downloadUri.Uri, HttpMethod.Get, headers).ConfigureAwait(false);
-
-            if (!(response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.PartialContent))
-            {
-                throw new WebDAVException((int)response.StatusCode, "Failed retrieving file.");
-            }
-
-            long? contentLength = response.Content.Headers.ContentLength;
-            if (contentLength == null)
-            {
-                throw new WebDAVException("Response content is nil");
-            }
-            else
-            {
-                transmissionHelper.SetTotalLength(response.Content.Headers.ContentLength.Value);
-            }
-
-            List<Task<Stream>> tasks = new List<Task<Stream>>();
-            long step = (1L << 20) * blockLength; // 2^10 * 2^10 == 1MB
-            var blockCount = Math.Ceiling(contentLength.Value * 1.0 / step);
-
-            transmissionHelper.Start();
-
-            Console.WriteLine($"Start download ! total length{contentLength.Value}");
-            for (int i = 0; i < blockCount; i++)
-            {
-                long start = i * step;
-                long end = (i + 1) * step - 1;
-                if ((contentLength.Value - 1) < end)
-                {
-                    end = contentLength.Value - 1;
+                    throw new WebDAVException("remoteFile is nil or collection");
                 }
 
-                tasks.Add(DownloadPartial(transmissionHelper, downloadUri.Uri.AbsoluteUri, start, end, step));
+                long? contentLength = remoteFile.ContentLength.Value;
+
+                if (contentLength == null)
+                {
+                    throw new WebDAVException("Response content is nil");
+                }
+                else
+                {
+                    transmissionHelper.SetTotalLength(remoteFile.ContentLength.Value);
+                }
+
+                List<Task> tasks = new List<Task>();
+                long step = (1L << 20) * blockLength; // 2^10 * 2^10 == 1MB
+                var blockCount = Math.Ceiling(remoteFile.ContentLength.Value * 1.0 / step);
+                string id = Guid.NewGuid().ToString("N");
+
+                transmissionHelper.Start();
+
+                Console.WriteLine($"Start download ! total length{remoteFile.ContentLength.Value}");
+                for (int i = 0; i < blockCount; i++)
+                {
+                    long start = i * step;
+                    long end = (i + 1) * step - 1;
+                    if ((remoteFile.ContentLength.Value - 1) < end)
+                    {
+                        end = remoteFile.ContentLength.Value - 1;
+                    }
+
+                    tasks.Add(DownloadPartial(id + i, transmissionHelper, remoteFile.Href, start, end, step));
+                }
+
+                await Task.Run(() => Task.WaitAll(tasks.ToArray()));
+                transmissionHelper.Stop();
+
+                Console.WriteLine("Files is merging ....");
+                using (FileStream fileOut = new FileStream(Path.Combine(localFileDirectory.FullName + remoteFile.DisplayName), FileMode.Create))
+                {
+                    for (int i = 0; i < blockCount; i++)
+                    {
+                        using (FileStream fileStream = new FileStream($"{id + i}.dat", FileMode.Open))
+                        {
+                            int b;
+                            while ((b = fileStream.ReadByte()) != -1)
+                            {
+                                fileOut.WriteByte((byte)b);
+                            }
+                        }
+                        File.Delete($"{id + i}.dat");
+                        Console.WriteLine($"{i} is OK");
+                    }
+                }
+
+                Console.WriteLine($"End download ! Enjoy yourself !");
             }
-
-            Task.WaitAll(tasks.ToArray());
-
-            Console.WriteLine($"End download ! Enjoy yourself !");
-            return await tasks.Aggregate(async (s1, s2) => new MergedStream(await s1, await s2));
+            catch (Exception ex)
+            {
+                transmissionHelper.Stop();
+                throw ex;
+            }
         }
 
         /// <summary>
@@ -462,7 +500,6 @@ namespace WebDAVClient
             }
         }
 
-
         /// <summary>
         /// Partial upload a part of file to the server
         /// </summary>
@@ -502,7 +539,6 @@ namespace WebDAVClient
                     response.Dispose();
             }
         }
-
 
         /// <summary>
         /// Create a directory on the server
@@ -560,7 +596,6 @@ namespace WebDAVClient
             await Delete(listUri.Uri).ConfigureAwait(false);
         }
 
-
         private async Task Delete(Uri listUri)
         {
             IDictionary<string, string> headers = new Dictionary<string, string>();
@@ -616,7 +651,6 @@ namespace WebDAVClient
 
             return await Copy(srcUri.Uri, dstUri.Uri).ConfigureAwait(false);
         }
-
 
         private async Task<bool> Move(Uri srcUri, Uri dstUri)
         {
@@ -675,11 +709,14 @@ namespace WebDAVClient
             // Should not have a trailing slash.
             var downloadUri = await GetServerUrl(remoteFilePath, false).ConfigureAwait(false);
             var response = await HttpRequest(downloadUri.Uri, HttpMethod.Get, header).ConfigureAwait(false);
+            //using (var response = await HttpRequest(downloadUri.Uri, HttpMethod.Get, header).ConfigureAwait(false))
+            //{
             if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.PartialContent)
             {
                 return await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
             }
             throw new WebDAVException((int)response.StatusCode, "Failed retrieving file.");
+            //}
         }
 
         #endregion
@@ -779,16 +816,7 @@ namespace WebDAVClient
 
         private async Task<UriBuilder> GetServerUrl(string path, bool appendTrailingSlash)
         {
-            Port = Server.StartsWith("https") ? 443 : 80;
-
-            // Resolve the base path on the server
-            if (_encodedBasePath == null)
-            {
-                var baseUri = new UriBuilder(_server) { Path = _basePath, Port = (int)Port };
-                var root = await Get(baseUri.Uri).ConfigureAwait(false);
-
-                _encodedBasePath = root.Href;
-            }
+            await SetEncodedBasePath();
 
             // If we've been asked for the "root" folder
             if (string.IsNullOrEmpty(path))
@@ -843,6 +871,18 @@ namespace WebDAVClient
 
 
                 return baseUri;
+            }
+        }
+
+        private async Task SetEncodedBasePath()
+        {
+            // Resolve the base path on the server
+            if (_encodedBasePath == null)
+            {
+                var baseUri = new UriBuilder(_server) { Path = BasePath, Port = Port.Value };
+                var root = await Get(baseUri.Uri).ConfigureAwait(false);
+
+                _encodedBasePath = root.Href;
             }
         }
 

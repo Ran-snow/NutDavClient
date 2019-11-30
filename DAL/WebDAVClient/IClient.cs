@@ -16,17 +16,35 @@ namespace WebDAVClient
         /// <summary>
         /// Specify the WebDAV hostname (required).
         /// </summary>
-        string Server { get; set; }
+        string Server { get;}
+
+        /// <summary>
+        /// Specify the WebDAV hostname (required).
+        /// </summary>
+        /// <param name="server"></param>
+        void SetServer(string server);
 
         /// <summary>
         /// Specify the path of a WebDAV directory to use as 'root' (default: /)
         /// </summary>
-        string BasePath { get; set; }
+        string BasePath { get;}
+
+        /// <summary>
+        /// Specify the path of a WebDAV directory to use as 'root' (default: /)
+        /// </summary>
+        /// <param name="basePath"></param>
+        Task SetBasePath(string basePath);
 
         /// <summary>
         /// Specify an port (default: null = auto-detect)
         /// </summary>
-        int? Port { get; set; }
+        int? Port { get; }
+
+        /// <summary>
+        /// Specify an port (default: null = auto-detect)
+        /// </summary>
+        /// <param name="port"></param>
+        void SetPort(int port);
 
         /// <summary>
         /// Specify the UserAgent (and UserAgent version) string to use in requests
@@ -79,10 +97,11 @@ namespace WebDAVClient
         /// <summary>
         /// Download a file from the server (Multithreading)
         /// </summary>
-        /// <param name="remoteFilePath">Source path and filename of the file on the server</param>
-        /// <param name="blockLength">PartialLength</param>
+        /// <param name="Item">remote file</param>
+        /// <param name="localFileDirectory">Local File Directory</param>
+        /// <param name="blockLength">PartialLength (MB)</param>
         /// <returns></returns>
-        Task<Stream> DownloadCrazy(string remoteFilePath, int blockLength = 1);
+        Task DownloadCrazy(Item remoteFile, DirectoryInfo localFileDirectory, int blockLength = 1);
 
         /// <summary>
         /// Upload a file to the server

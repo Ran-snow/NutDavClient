@@ -415,40 +415,33 @@ namespace WindowsFormsApp
             try
             {
                 // Basic authentication required
-                IClient c = new Client(new NetworkCredential { UserName = "434@ss.com", Password = "asdasd" });
-                //https://vscode.cdn.azure.cn/stable/f359dd69833dd8800b54d458f6d37ab7c78df520/VSCodeUserSetup-x64-1.40.2.exe
-                c.Server = "https://vscode.cdn.azure.cn";
-                c.BasePath = "/stable/f359dd69833dd8800b54d458f6d37ab7c78df520/";
+                IClient c = new Client(new NetworkCredential { UserName = "XXXX", Password = "XXXX" });
+                c.SetServer("http://192.168.6.5/");
+                await c.SetBasePath("/");
+                c.UserAgent = Guid.NewGuid().ToString("N");
+                c.UserAgentVersion = "1.0.1";
                 c.OnProgressHandler += (timeCost, percentage, downloadSpeed) =>
                 {
                     Console.WriteLine($"耗时：{CalcTime(timeCost)} 进度:{ Convert.ToInt32(percentage * 100)} 速度:{CalcSize(downloadSpeed)}/s");
                 };
 
-                using (FileStream fileStream = new FileStream("666.pdf", FileMode.Create))
-                using (Stream stream = await c.DownloadCrazy("VSCodeUserSetup-x64-1.40.2.exe"))
-                {
-                    int b;
-                    while ((b = stream.ReadByte()) > -1)
-                    {
-                        fileStream.WriteByte((byte)b);
-                    }
-
-                    Console.WriteLine("任务完成");
-                }
-
-                if ((await c.List()).Any(x => x.DisplayName == "Aegis"))
-                {
-                   
-                }
-                else
+                if (!(await c.List()).Any(x => x.DisplayName == "Aegis"))
                 {
                     await c.CreateDir("/", "Aegis");
+                    await c.SetBasePath("/Aegis/");
                 }
+
+                //await c.Upload("/Aegis", File.OpenRead(@"F:\Download\阳光电影www.ygdy8.com.欧洲攻略.HD.1080p.国语中字.mp4"), "666.dat");
+                foreach (var item in await c.List("Aegis"))
+                {
+                    await c.DownloadCrazy(item, new DirectoryInfo("./"), 100);
+                }
+
+                Console.WriteLine("任务完成");
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
-                throw ex;
             }
         }
     }

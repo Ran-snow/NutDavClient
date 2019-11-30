@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using System.Timers;
 
 namespace WebDAVClient.Helpers
@@ -41,11 +42,14 @@ namespace WebDAVClient.Helpers
 
         public void Stop()
         {
-            totalLength = 0;
-            realTimeLength = 0;
-            lastlLength = 0;
-            timeCost = 0;
-            timer.Enabled = false;
+            Task.Delay(1200).ContinueWith((t) =>
+            {
+                totalLength = 0;
+                realTimeLength = 0;
+                lastlLength = 0;
+                timeCost = 0;
+                timer.Enabled = false;
+            });
         }
 
         private void Timer_Elapsed(object sender, ElapsedEventArgs e)
