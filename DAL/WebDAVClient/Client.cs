@@ -48,7 +48,7 @@ namespace WebDAVClient
         private string _basePath = "/";
         private string _encodedBasePath;
 
-
+        public event Action<int, double, long> OnProgressHandler;
 
         #region WebDAV connection parameters
 
@@ -299,7 +299,7 @@ namespace WebDAVClient
         /// Download a file from the server
         /// </summary>
         /// <param name="remoteFilePath">Source path and filename of the file on the server</param>
-        public Task<Stream> Download(string remoteFilePath)
+        public async Task<Stream> Download(string remoteFilePath)
         {
             var headers = new Dictionary<string, string> { { "translate", "f" } };
             if (CustomHeaders != null)
@@ -309,9 +309,8 @@ namespace WebDAVClient
                     headers.Add(keyValuePair.Key, keyValuePair.Value);
                 }
             }
-            return DownloadFile(remoteFilePath, headers);
+            return await DownloadFile(remoteFilePath, headers);
         }
-
 
         /// <summary>
         /// Download a part of file from the server
@@ -319,7 +318,7 @@ namespace WebDAVClient
         /// <param name="remoteFilePath">Source path and filename of the file on the server</param>
         /// <param name="startBytes">Start bytes of content</param>
         /// <param name="endBytes">End bytes of content</param>
-        public Task<Stream> DownloadPartial(string remoteFilePath, long startBytes, long endBytes)
+        public async Task<Stream> DownloadPartial(string remoteFilePath, long startBytes, long endBytes)
         {
             var headers = new Dictionary<string, string> { { "translate", "f" }, { "Range", "bytes=" + startBytes + "-" + endBytes } };
             if (CustomHeaders != null)
@@ -329,9 +328,98 @@ namespace WebDAVClient
                     headers.Add(keyValuePair.Key, keyValuePair.Value);
                 }
             }
-            return DownloadFile(remoteFilePath, headers);
+            return await DownloadFile(remoteFilePath, headers);
         }
 
+        private async Task<Stream> DownloadPartial(TransmissionHelper transmissionHelper, string remoteFilePath, long startBytes, long endBytes, long step)
+        {
+            var headers = new Dictionary<string, string> { { "translate", "f" }, { "Range", "bytes=" + startBytes + "-" + endBytes } };
+            if (CustomHeaders != null)
+            {
+                foreach (var keyValuePair in CustomHeaders)
+                {
+                    headers.Add(keyValuePair.Key, keyValuePair.Value);
+                }
+            }
+
+            using (var stream = await DownloadFile(remoteFilePath, headers))
+            {
+                var length = endBytes - startBytes + 1;
+                var consumed = 0;
+                var buffer = new byte[step];
+                while (consumed < length)
+                {
+
+                    var read = await stream.ReadAsync(buffer, 0, buffer.Length);
+                    consumed += read;
+                    transmissionHelper.IncreaseRealTimeLength(read);
+                }
+
+                //stream.Seek(0, SeekOrigin.Begin);
+                return stream;
+            }
+
+        }
+
+        public async Task<Stream> DownloadCrazy(string remoteFilePath, int blockLength = 1)
+        {
+            TransmissionHelper transmissionHelper = new TransmissionHelper();
+            transmissionHelper.OnProgressHandler += (timeCost, plannedSpeed, downloadSpeed) =>
+            {
+                this.OnProgressHandler?.Invoke(timeCost, plannedSpeed, downloadSpeed);
+            };
+
+            var headers = new Dictionary<string, string> { { "translate", "f" } };
+            if (CustomHeaders != null)
+            {
+                foreach (var keyValuePair in CustomHeaders)
+                {
+                    headers.Add(keyValuePair.Key, keyValuePair.Value);
+                }
+            }
+
+            var downloadUri = await GetServerUrl(remoteFilePath, false).ConfigureAwait(false);
+            var response = await HttpRequest(downloadUri.Uri, HttpMethod.Get, headers).ConfigureAwait(false);
+
+            if (!(response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.PartialContent))
+            {
+                throw new WebDAVException((int)response.StatusCode, "Failed retrieving file.");
+            }
+
+            long? contentLength = response.Content.Headers.ContentLength;
+            if (contentLength == null)
+            {
+                throw new WebDAVException("Response content is nil");
+            }
+            else
+            {
+                transmissionHelper.SetTotalLength(response.Content.Headers.ContentLength.Value);
+            }
+
+            List<Task<Stream>> tasks = new List<Task<Stream>>();
+            long step = (1L << 20) * blockLength; // 2^10 * 2^10 == 1MB
+            var blockCount = Math.Ceiling(contentLength.Value * 1.0 / step);
+
+            transmissionHelper.Start();
+
+            Console.WriteLine($"Start download ! total length{contentLength.Value}");
+            for (int i = 0; i < blockCount; i++)
+            {
+                long start = i * step;
+                long end = (i + 1) * step - 1;
+                if ((contentLength.Value - 1) < end)
+                {
+                    end = contentLength.Value - 1;
+                }
+
+                tasks.Add(DownloadPartial(transmissionHelper, downloadUri.Uri.AbsoluteUri, start, end, step));
+            }
+
+            Task.WaitAll(tasks.ToArray());
+
+            Console.WriteLine($"End download ! Enjoy yourself !");
+            return await tasks.Aggregate(async (s1, s2) => new MergedStream(await s1, await s2));
+        }
 
         /// <summary>
         /// Upload a file to the server
@@ -370,10 +458,8 @@ namespace WebDAVClient
             }
             finally
             {
-                if (response != null)
-                    response.Dispose();
+                if (response != null) response.Dispose();
             }
-
         }
 
 

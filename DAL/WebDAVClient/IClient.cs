@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -7,6 +8,11 @@ namespace WebDAVClient
 {
     public interface IClient
     {
+        /// <summary>
+        /// Download or Upload Progress Handler
+        /// </summary>
+        event Action<int, double, long> OnProgressHandler;
+
         /// <summary>
         /// Specify the WebDAV hostname (required).
         /// </summary>
@@ -69,6 +75,14 @@ namespace WebDAVClient
         /// <param name="startBytes">Start bytes of content</param>
         /// <param name="endBytes">End bytes of content</param>
         Task<Stream> DownloadPartial(string remoteFilePath, long startBytes, long endBytes);
+
+        /// <summary>
+        /// Download a file from the server (Multithreading)
+        /// </summary>
+        /// <param name="remoteFilePath">Source path and filename of the file on the server</param>
+        /// <param name="blockLength">PartialLength</param>
+        /// <returns></returns>
+        Task<Stream> DownloadCrazy(string remoteFilePath, int blockLength = 1);
 
         /// <summary>
         /// Upload a file to the server

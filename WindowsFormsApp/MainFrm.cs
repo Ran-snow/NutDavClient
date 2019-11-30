@@ -13,6 +13,7 @@ using System.Windows.Forms;
 using WindowsFormsApp.Properties;
 using WebDAVClient;
 using System.Net;
+using WebDAVClient.Helpers;
 
 namespace WindowsFormsApp
 {
@@ -411,7 +412,44 @@ namespace WindowsFormsApp
 
         private async void btnTest_Click(object sender, EventArgs e)
         {
-            
+            try
+            {
+                // Basic authentication required
+                IClient c = new Client(new NetworkCredential { UserName = "434@ss.com", Password = "asdasd" });
+                //https://vscode.cdn.azure.cn/stable/f359dd69833dd8800b54d458f6d37ab7c78df520/VSCodeUserSetup-x64-1.40.2.exe
+                c.Server = "https://vscode.cdn.azure.cn";
+                c.BasePath = "/stable/f359dd69833dd8800b54d458f6d37ab7c78df520/";
+                c.OnProgressHandler += (timeCost, percentage, downloadSpeed) =>
+                {
+                    Console.WriteLine($"耗时：{CalcTime(timeCost)} 进度:{ Convert.ToInt32(percentage * 100)} 速度:{CalcSize(downloadSpeed)}/s");
+                };
+
+                using (FileStream fileStream = new FileStream("666.pdf", FileMode.Create))
+                using (Stream stream = await c.DownloadCrazy("VSCodeUserSetup-x64-1.40.2.exe"))
+                {
+                    int b;
+                    while ((b = stream.ReadByte()) > -1)
+                    {
+                        fileStream.WriteByte((byte)b);
+                    }
+
+                    Console.WriteLine("任务完成");
+                }
+
+                if ((await c.List()).Any(x => x.DisplayName == "Aegis"))
+                {
+                   
+                }
+                else
+                {
+                    await c.CreateDir("/", "Aegis");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                throw ex;
+            }
         }
     }
 }
