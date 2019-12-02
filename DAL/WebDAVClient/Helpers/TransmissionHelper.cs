@@ -42,7 +42,7 @@ namespace WebDAVClient.Helpers
 
         public void Stop()
         {
-            Task.Delay(1200).ContinueWith((t) =>
+            Task.Delay(1000).ContinueWith((t) =>
             {
                 totalLength = 0;
                 realTimeLength = 0;
@@ -55,6 +55,12 @@ namespace WebDAVClient.Helpers
         private void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
             double plannedSpeed = Math.Round(realTimeLength * 1.0 / totalLength, 2);
+
+            if (plannedSpeed == double.NaN)
+            {
+                Stop();
+                return;
+            }
 
             long downloadSpeed = realTimeLength - lastlLength;
             lastlLength = realTimeLength;

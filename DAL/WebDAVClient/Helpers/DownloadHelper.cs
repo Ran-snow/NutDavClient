@@ -129,11 +129,7 @@ namespace WebDAVClient.Helpers
                     {
                         using (FileStream fileStream = new FileStream($"{id}.dat", FileMode.Open))
                         {
-                            int b;
-                            while ((b = fileStream.ReadByte()) != -1)
-                            {
-                                fileOut.WriteByte((byte)b);
-                            }
+                            await fileStream.CopyToAsync(fileOut);
                         }
                         File.Delete($"{id}.dat");
                     }
