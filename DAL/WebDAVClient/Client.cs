@@ -382,9 +382,15 @@ namespace WebDAVClient
             }
         }
 
+        /// <summary>
+        /// MutilateThread Download
+        /// </summary>
+        /// <param name="remoteFile">file url</param>
+        /// <param name="localFileDirectory">local dic</param>
+        /// <param name="blockLength">N MB</param>
+        /// <returns></returns>
         public async Task DownloadCrazy(Item remoteFile, DirectoryInfo localFileDirectory, int blockLength = 1)
         {
-
             TransmissionHelper transmissionHelper = new TransmissionHelper();
             transmissionHelper.OnProgressHandler += (timeCost, plannedSpeed, downloadSpeed) =>
             {
@@ -493,6 +499,93 @@ namespace WebDAVClient
             finally
             {
                 if (response != null) response.Dispose();
+            }
+        }
+
+        public async Task UploadCrazy(string localFile, string remoteFileDirectory, int blockLength = 1)
+        {
+            TransmissionHelper transmissionHelper = new TransmissionHelper();
+            transmissionHelper.OnProgressHandler += (timeCost, plannedSpeed, downloadSpeed) =>
+            {
+                this.OnProgressHandler?.Invoke(timeCost, plannedSpeed, downloadSpeed);
+            };
+
+            try
+            {
+                if (!File.Exists(localFile))
+                {
+                    throw new WebDAVException($"{localFile} is not file.");
+                }
+
+                FileInfo fileInfo = new FileInfo(localFile);
+                Stream stream = File.OpenRead(localFile);
+
+                transmissionHelper.SetTotalLength(fileInfo.Length);
+
+                List<Task> tasks = new List<Task>();
+                long step = (1L << 20) * blockLength; // 2^10 * 2^10 == 1MB
+                var blockCount = Math.Ceiling(fileInfo.Length * 1.0 / step);
+                string id = Guid.NewGuid().ToString("N");
+
+                transmissionHelper.Start();
+
+                Console.WriteLine($"Start upload ! total length{fileInfo.Length}");
+                for (int i = 0; i < blockCount; i++)
+                {
+                    long start = i * step;
+                    long end = (i + 1) * step - 1;
+                    if ((fileInfo.Length - 1) < end)
+                    {
+                        end = fileInfo.Length - 1;
+                    }
+
+                    tasks.Add(UploadPartial(transmissionHelper, stream, remoteFileDirectory, start, end));
+                }
+
+                await Task.Run(() => Task.WaitAll(tasks.ToArray()));
+                transmissionHelper.Stop();
+
+                Console.WriteLine($"End uplaod ! Enjoy yourself !");
+            }
+            catch (Exception ex)
+            {
+                transmissionHelper.Stop();
+                throw ex;
+            }
+        }
+
+        private async Task UploadPartial(TransmissionHelper transmissionHelper, Stream content, string remoteFileName, long startBytes, long endBytes)
+        {
+            if (startBytes + content.Length != endBytes)
+            {
+                throw new InvalidOperationException("The length of the given content plus the startBytes must match the endBytes.");
+            }
+
+            // Should not have a trailing slash.
+            var uploadUri = await GetServerUrl(remoteFileName, false).ConfigureAwait(false);
+
+            HttpResponseMessage response = null;
+
+            try
+            {
+                response = await HttpUploadRequest(uploadUri.Uri, HttpMethod.Put, content, null, startBytes, endBytes).ConfigureAwait(false);
+
+                if (response.StatusCode != HttpStatusCode.OK &&
+                    response.StatusCode != HttpStatusCode.NoContent &&
+                    response.StatusCode != HttpStatusCode.Created)
+                {
+                    throw new WebDAVException((int)response.StatusCode, "Failed uploading file.");
+                }
+
+                if (response.IsSuccessStatusCode)
+                {
+                    transmissionHelper.IncreaseRealTimeLength(endBytes - startBytes + 1);
+                }
+            }
+            finally
+            {
+                if (response != null)
+                    response.Dispose();
             }
         }
 
