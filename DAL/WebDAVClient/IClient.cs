@@ -122,6 +122,15 @@ namespace WebDAVClient
         Task<bool> UploadPartial(string remoteFilePath, Stream content, string name, long startBytes, long endBytes);
 
         /// <summary>
+        /// Upload file to the server. (Multithreading)
+        /// </summary>
+        /// <param name="localFile">Local File</param>
+        /// <param name="remoteFileDirectory">Target path excluding the servername and base dic</param>
+        /// <param name="blockLength">PartialLength (MB)</param>
+        /// <returns></returns>
+        Task UploadCrazy(string localFile, string remoteFileDirectory, int blockLength = 1);
+
+        /// <summary>
         /// Create a directory on the server
         /// </summary>
         /// <param name="remotePath">Destination path of the directory on the server</param>

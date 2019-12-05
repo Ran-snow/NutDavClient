@@ -428,14 +428,24 @@ namespace WindowsFormsApp
                 if (!(await c.List()).Any(x => x.DisplayName == "Aegis"))
                 {
                     await c.CreateDir("/", "Aegis");
-                    await c.SetBasePath("/Aegis/");
+
+                }
+                await c.SetBasePath("/Aegis/");
+
+                foreach (var item in await c.List())
+                {
+                    Console.WriteLine(item.DisplayName);
                 }
 
-                //await c.Upload("/Aegis", File.OpenRead(@"F:\Download\阳光电影www.ygdy8.com.欧洲攻略.HD.1080p.国语中字.mp4"), "666.dat");
-                foreach (var item in await c.List("Aegis"))
+                if ((await c.List()).Any(x => x.DisplayName == "666.dat"))
                 {
-                    await c.DownloadCrazy(item, new DirectoryInfo("./"), 100);
+                    await c.DeleteFile("666.dat");
                 }
+                await c.UploadCrazy(@"F:\Download\userguide.pdf", "666.dat", 1);
+                //foreach (var item in await c.List("Aegis"))
+                //{
+                //    await c.DownloadCrazy(item, new DirectoryInfo("./"), 100);
+                //}
 
                 Console.WriteLine("任务完成");
             }

@@ -95,7 +95,7 @@ namespace WebDAVClient
                 SetPort(Server.StartsWith("https") ? 443 : 80);
             }
 
-            await SetEncodedBasePath();
+            await SetEncodedBasePath(isForce: true);
         }
 
         /// <summary>
@@ -518,31 +518,34 @@ namespace WebDAVClient
                 }
 
                 FileInfo fileInfo = new FileInfo(localFile);
-                Stream stream = File.OpenRead(localFile);
-
-                transmissionHelper.SetTotalLength(fileInfo.Length);
-
-                List<Task> tasks = new List<Task>();
-                long step = (1L << 20) * blockLength; // 2^10 * 2^10 == 1MB
-                var blockCount = Math.Ceiling(fileInfo.Length * 1.0 / step);
-                string id = Guid.NewGuid().ToString("N");
-
-                transmissionHelper.Start();
-
-                Console.WriteLine($"Start upload ! total length{fileInfo.Length}");
-                for (int i = 0; i < blockCount; i++)
+                using (Stream stream = File.OpenRead(localFile))
                 {
-                    long start = i * step;
-                    long end = (i + 1) * step - 1;
-                    if ((fileInfo.Length - 1) < end)
+
+                    transmissionHelper.SetTotalLength(fileInfo.Length);
+
+                    List<Task> tasks = new List<Task>();
+                    long step = (1L << 20) * blockLength; // 2^10 * 2^10 == 1MB
+                    var blockCount = Math.Ceiling(fileInfo.Length * 1.0 / step);
+                    string id = Guid.NewGuid().ToString("N");
+
+                    transmissionHelper.Start();
+
+                    Console.WriteLine($"Start upload ! total length{fileInfo.Length}");
+                    for (int i = 0; i < blockCount; i++)
                     {
-                        end = fileInfo.Length - 1;
+                        long start = i * step;
+                        long end = (i + 1) * step - 1;
+                        if ((fileInfo.Length - 1) < end)
+                        {
+                            end = fileInfo.Length - 1;
+                        }
+
+                        tasks.Add(UploadPartial(transmissionHelper, stream, remoteFileDirectory, start, end));
                     }
 
-                    tasks.Add(UploadPartial(transmissionHelper, stream, remoteFileDirectory, start, end));
+                    await Task.Run(() => Task.WaitAll(tasks.ToArray()));
                 }
 
-                await Task.Run(() => Task.WaitAll(tasks.ToArray()));
                 transmissionHelper.Stop();
 
                 Console.WriteLine($"End uplaod ! Enjoy yourself !");
@@ -556,10 +559,13 @@ namespace WebDAVClient
 
         private async Task UploadPartial(TransmissionHelper transmissionHelper, Stream content, string remoteFileName, long startBytes, long endBytes)
         {
-            if (startBytes + content.Length != endBytes)
-            {
-                throw new InvalidOperationException("The length of the given content plus the startBytes must match the endBytes.");
-            }
+            Console.WriteLine($"startBytes:{startBytes}  endBytes:{endBytes}");
+
+            int step = (int)(endBytes - startBytes);
+            byte[] buffer = new byte[step];
+            content.Seek(startBytes, SeekOrigin.Begin);
+            content.Read(buffer, 0, step);
+            await content.ReadAsync(buffer, 0, step);
 
             // Should not have a trailing slash.
             var uploadUri = await GetServerUrl(remoteFileName, false).ConfigureAwait(false);
@@ -568,24 +574,29 @@ namespace WebDAVClient
 
             try
             {
-                response = await HttpUploadRequest(uploadUri.Uri, HttpMethod.Put, content, null, startBytes, endBytes).ConfigureAwait(false);
+                using (Stream stream = new MemoryStream(buffer))
+                {
+                    response = await HttpUploadRequest(uploadUri.Uri, HttpMethod.Put, stream, null, startBytes, endBytes).ConfigureAwait(false);
 
-                if (response.StatusCode != HttpStatusCode.OK &&
+                    if (response.StatusCode != HttpStatusCode.OK &&
                     response.StatusCode != HttpStatusCode.NoContent &&
                     response.StatusCode != HttpStatusCode.Created)
-                {
-                    throw new WebDAVException((int)response.StatusCode, "Failed uploading file.");
-                }
+                    {
+                        throw new WebDAVException((int)response.StatusCode, "Failed uploading file.");
+                    }
 
-                if (response.IsSuccessStatusCode)
-                {
-                    transmissionHelper.IncreaseRealTimeLength(endBytes - startBytes + 1);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        transmissionHelper.IncreaseRealTimeLength(endBytes - startBytes + 1);
+                    }
                 }
             }
             finally
             {
                 if (response != null)
+                {
                     response.Dispose();
+                }
             }
         }
 
@@ -876,11 +887,17 @@ namespace WebDAVClient
                 // Need to send along content?
                 if (content != null)
                 {
+                    if ((endbytes - startbytes + 1) != content.Length)
+                    {
+
+                    }
+
                     request.Content = new StreamContent(content);
                     if (startbytes.HasValue && endbytes.HasValue)
                     {
                         request.Content.Headers.ContentRange = ContentRangeHeaderValue.Parse($"bytes {startbytes}-{endbytes}/*");
-                        request.Content.Headers.ContentLength = endbytes - startbytes;
+                        request.Content.Headers.ContentLength = endbytes - startbytes + 1;
+                        request.Content.Headers.ContentLength = endbytes - startbytes + 1;
                     }
                 }
 
@@ -963,10 +980,10 @@ namespace WebDAVClient
             }
         }
 
-        private async Task SetEncodedBasePath()
+        private async Task SetEncodedBasePath(bool isForce = false)
         {
             // Resolve the base path on the server
-            if (_encodedBasePath == null)
+            if (_encodedBasePath == null || isForce)
             {
                 var baseUri = new UriBuilder(_server) { Path = BasePath, Port = Port.Value };
                 var root = await Get(baseUri.Uri).ConfigureAwait(false);
