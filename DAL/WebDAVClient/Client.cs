@@ -541,7 +541,13 @@ namespace WebDAVClient
                             end = fileInfo.Length - 1;
                         }
 
-                        tasks.Add(UploadPartial(transmissionHelper, stream, remoteFileDirectory, start, end));
+                        int stepStream = (int)(end - start + 1);
+                        byte[] buffer = new byte[stepStream];
+
+                        stream.Seek(start, SeekOrigin.Begin);
+                        await stream.ReadAsync(buffer, 0, stepStream);
+
+                        tasks.Add(UploadPartial(transmissionHelper, new MemoryStream(buffer), remoteFileDirectory, start, end));
                     }
 
                     await Task.Run(() => Task.WaitAll(tasks.ToArray()));
@@ -558,20 +564,9 @@ namespace WebDAVClient
             }
         }
 
-        private readonly object nima = new object();
         private async Task UploadPartial(TransmissionHelper transmissionHelper, Stream content, string remoteFileName, long startBytes, long endBytes)
         {
             Console.WriteLine($"startBytes:{startBytes}  endBytes:{endBytes}");
-
-            int step = (int)(endBytes - startBytes + 1);
-            byte[] buffer = new byte[step];
-
-            lock (nima)
-            {
-                content.Seek(startBytes, SeekOrigin.Begin);
-                content.Read(buffer, 0, step);
-                //await content.ReadAsync(buffer, 0, step);
-            }
 
             // Should not have a trailing slash.
             var uploadUri = await GetServerUrl(remoteFileName, false).ConfigureAwait(false);
@@ -580,22 +575,19 @@ namespace WebDAVClient
 
             try
             {
-                using (Stream stream = new MemoryStream(buffer))
+                Console.WriteLine("current stream length:" + content.Length);
+                response = await HttpUploadRequest(uploadUri.Uri, HttpMethod.Put, content, null, startBytes, endBytes).ConfigureAwait(false);
+
+                if (response.StatusCode != HttpStatusCode.OK &&
+                response.StatusCode != HttpStatusCode.NoContent &&
+                response.StatusCode != HttpStatusCode.Created)
                 {
-                    Console.WriteLine("current stream length:" + stream.Length);
-                    response = await HttpUploadRequest(uploadUri.Uri, HttpMethod.Put, stream, null, startBytes, endBytes).ConfigureAwait(false);
+                    throw new WebDAVException((int)response.StatusCode, "Failed uploading file.");
+                }
 
-                    if (response.StatusCode != HttpStatusCode.OK &&
-                    response.StatusCode != HttpStatusCode.NoContent &&
-                    response.StatusCode != HttpStatusCode.Created)
-                    {
-                        throw new WebDAVException((int)response.StatusCode, "Failed uploading file.");
-                    }
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        transmissionHelper.IncreaseRealTimeLength(endBytes - startBytes + 1);
-                    }
+                if (response.IsSuccessStatusCode)
+                {
+                    transmissionHelper.IncreaseRealTimeLength(endBytes - startBytes + 1);
                 }
             }
             finally
@@ -604,6 +596,8 @@ namespace WebDAVClient
                 {
                     response.Dispose();
                 }
+
+                content.Close();
             }
         }
 
