@@ -58,7 +58,7 @@ namespace WebDAVClient.Helpers
 
             if (plannedSpeed == double.NaN)
             {
-                Stop();
+                //Stop();
                 return;
             }
 

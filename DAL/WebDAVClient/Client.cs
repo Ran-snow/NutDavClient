@@ -439,7 +439,8 @@ namespace WebDAVClient
                 transmissionHelper.Stop();
 
                 Console.WriteLine("Files is merging ....");
-                using (FileStream fileOut = new FileStream(Path.Combine(localFileDirectory.FullName + remoteFile.DisplayName), FileMode.Create))
+                using (FileStream fileOut =
+                    new FileStream(Path.Combine(localFileDirectory.FullName.TrimEnd('/') + "/" + remoteFile.DisplayName.TrimStart('/')), FileMode.Create))
                 {
                     for (int i = 0; i < blockCount; i++)
                     {
@@ -557,15 +558,20 @@ namespace WebDAVClient
             }
         }
 
+        private readonly object nima = new object();
         private async Task UploadPartial(TransmissionHelper transmissionHelper, Stream content, string remoteFileName, long startBytes, long endBytes)
         {
             Console.WriteLine($"startBytes:{startBytes}  endBytes:{endBytes}");
 
-            int step = (int)(endBytes - startBytes);
+            int step = (int)(endBytes - startBytes + 1);
             byte[] buffer = new byte[step];
-            content.Seek(startBytes, SeekOrigin.Begin);
-            content.Read(buffer, 0, step);
-            await content.ReadAsync(buffer, 0, step);
+
+            lock (nima)
+            {
+                content.Seek(startBytes, SeekOrigin.Begin);
+                content.Read(buffer, 0, step);
+                //await content.ReadAsync(buffer, 0, step);
+            }
 
             // Should not have a trailing slash.
             var uploadUri = await GetServerUrl(remoteFileName, false).ConfigureAwait(false);
@@ -576,6 +582,7 @@ namespace WebDAVClient
             {
                 using (Stream stream = new MemoryStream(buffer))
                 {
+                    Console.WriteLine("current stream length:" + stream.Length);
                     response = await HttpUploadRequest(uploadUri.Uri, HttpMethod.Put, stream, null, startBytes, endBytes).ConfigureAwait(false);
 
                     if (response.StatusCode != HttpStatusCode.OK &&
@@ -887,16 +894,10 @@ namespace WebDAVClient
                 // Need to send along content?
                 if (content != null)
                 {
-                    if ((endbytes - startbytes + 1) != content.Length)
-                    {
-
-                    }
-
                     request.Content = new StreamContent(content);
                     if (startbytes.HasValue && endbytes.HasValue)
                     {
                         request.Content.Headers.ContentRange = ContentRangeHeaderValue.Parse($"bytes {startbytes}-{endbytes}/*");
-                        request.Content.Headers.ContentLength = endbytes - startbytes + 1;
                         request.Content.Headers.ContentLength = endbytes - startbytes + 1;
                     }
                 }

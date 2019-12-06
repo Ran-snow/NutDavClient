@@ -437,15 +437,16 @@ namespace WindowsFormsApp
                     Console.WriteLine(item.DisplayName);
                 }
 
-                if ((await c.List()).Any(x => x.DisplayName == "666.dat"))
+                if ((await c.List()).Any(x => x.DisplayName == "userguide.pdf"))
                 {
-                    await c.DeleteFile("666.dat");
+                    await c.DeleteFile("userguide.pdf");
                 }
-                await c.UploadCrazy(@"F:\Download\userguide.pdf", "666.dat", 1);
-                //foreach (var item in await c.List("Aegis"))
-                //{
-                //    await c.DownloadCrazy(item, new DirectoryInfo("./"), 100);
-                //}
+                await c.UploadCrazy(@"F:\Download\userguide.pdf", "userguide.pdf", 1);
+                //await c.Upload("/Aegis/", File.OpenRead(@"F:\Download\userguide.pdf"), "666.dat");
+                foreach (var item in await c.List("/"))
+                {
+                    await c.DownloadCrazy(item, new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.Desktop)), 1);
+                }
 
                 Console.WriteLine("任务完成");
             }
