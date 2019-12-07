@@ -547,7 +547,7 @@ namespace WebDAVClient
                         stream.Seek(start, SeekOrigin.Begin);
                         await stream.ReadAsync(buffer, 0, stepStream);
 
-                        tasks.Add(UploadPartial(transmissionHelper, new MemoryStream(buffer), remoteFileDirectory, start, end));
+                        tasks.Add(UploadPartial(transmissionHelper, new MemoryStream(buffer), remoteFileDirectory, start, end, stream.Length));
                     }
 
                     await Task.Run(() => Task.WaitAll(tasks.ToArray()));
@@ -564,7 +564,7 @@ namespace WebDAVClient
             }
         }
 
-        private async Task UploadPartial(TransmissionHelper transmissionHelper, Stream content, string remoteFileName, long startBytes, long endBytes)
+        private async Task UploadPartial(TransmissionHelper transmissionHelper, Stream content, string remoteFileName, long startBytes, long endBytes, long totalLength)
         {
             Console.WriteLine($"startBytes:{startBytes}  endBytes:{endBytes}");
 
@@ -576,7 +576,7 @@ namespace WebDAVClient
             try
             {
                 Console.WriteLine("current stream length:" + content.Length);
-                response = await HttpUploadRequest(uploadUri.Uri, HttpMethod.Put, content, null, startBytes, endBytes).ConfigureAwait(false);
+                response = await HttpUploadRequest(uploadUri.Uri, HttpMethod.Put, content, null, startBytes, endBytes, totalLength).ConfigureAwait(false);
 
                 if (response.StatusCode != HttpStatusCode.OK &&
                 response.StatusCode != HttpStatusCode.NoContent &&
@@ -867,7 +867,7 @@ namespace WebDAVClient
         /// <param name="headers"></param>
         /// <param name="method"></param>
         /// <param name="content"></param>
-        private async Task<HttpResponseMessage> HttpUploadRequest(Uri uri, HttpMethod method, Stream content, IDictionary<string, string> headers = null, long? startbytes = null, long? endbytes = null)
+        private async Task<HttpResponseMessage> HttpUploadRequest(Uri uri, HttpMethod method, Stream content, IDictionary<string, string> headers = null, long? startbytes = null, long? endbytes = null, long? totalLength = null)
         {
             using (var request = new HttpRequestMessage(method, uri))
             {
@@ -891,7 +891,8 @@ namespace WebDAVClient
                     request.Content = new StreamContent(content);
                     if (startbytes.HasValue && endbytes.HasValue)
                     {
-                        request.Content.Headers.ContentRange = ContentRangeHeaderValue.Parse($"bytes {startbytes}-{endbytes}/*");
+                        var len = totalLength.HasValue ? totalLength.ToString() : "*";
+                        request.Content.Headers.ContentRange = ContentRangeHeaderValue.Parse($"bytes {startbytes}-{endbytes}/{len}");
                         request.Content.Headers.ContentLength = endbytes - startbytes + 1;
                     }
                 }
