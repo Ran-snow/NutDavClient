@@ -114,7 +114,8 @@ namespace WindowsFormsApp
         private void CalcListViewWidth()
         {
             //Auto Resize Columns 
-            lvFileExplorer.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+            lvFileExplorer.AutoResizeColumns(
+                lvFileExplorer.Items.Count > 0 ? ColumnHeaderAutoResizeStyle.ColumnContent : ColumnHeaderAutoResizeStyle.HeaderSize);
 
             //Get cols' sum
             int with = 0;
@@ -203,35 +204,6 @@ namespace WindowsFormsApp
             tvFiles.ImageList = imageList;
             lvFileExplorer.LargeImageList = imageList;
             lvFileExplorer.SmallImageList = imageList;
-
-            //Set Listview Column Header
-            this.lvFileExplorer.Columns.AddRange(new List<ColumnHeader>()
-            {
-                new ColumnHeader ()
-                {
-                    Text = "Name",
-                    TextAlign = HorizontalAlignment.Left,
-                    Width = 80
-                },
-                new ColumnHeader ()
-                {
-                    Text = "Ext",
-                    TextAlign = HorizontalAlignment.Left,
-                    Width = 80
-                },
-                new ColumnHeader ()
-                {
-                    Text = "LastWriteTime",
-                    TextAlign = HorizontalAlignment.Left,
-                    Width = 80
-                },
-                new ColumnHeader ()
-                {
-                    Text = "Length",
-                    TextAlign = HorizontalAlignment.Left,
-                    Width = 80
-                }
-            }.ToArray());
 
             PopulateTreeView();
         }
